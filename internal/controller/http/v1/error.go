@@ -2,7 +2,14 @@ package v1
 
 import (
 	"errors"
+	"fmt"
 	"github.com/labstack/echo/v4"
+)
+
+var (
+	ErrInvalidInputBody  = fmt.Errorf("invalid input body")
+	ErrInvalidAuthHeader = fmt.Errorf("invalid auth header")
+	ErrCannotParseToken  = fmt.Errorf("cannot parse token")
 )
 
 func newErrorResponse(c echo.Context, errStatus int, message string) {

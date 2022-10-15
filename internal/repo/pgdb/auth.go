@@ -24,13 +24,13 @@ func (r *AuthRepo) CreateUser(ctx context.Context, user entity.User) (int, error
 		ToSql()
 
 	if err != nil {
-		return 0, fmt.Errorf("repo - AuthRepo - CreateUser - r.Builder: %w", err)
+		return 0, fmt.Errorf("AuthRepo.CreateUser - r.Builder: %v", err)
 	}
 
 	var id int
 	err = r.Pool.QueryRow(ctx, sql, args...).Scan(&id)
 	if err != nil {
-		return 0, fmt.Errorf("repo - AuthRepo - CreateUser - r.Pool.QueryRow: %w", err)
+		return 0, fmt.Errorf("AuthRepo.CreateUser - r.Pool.QueryRow: %v", err)
 	}
 
 	return id, nil
@@ -44,13 +44,13 @@ func (r *AuthRepo) GetUser(ctx context.Context, username, passwordHash string) (
 		ToSql()
 
 	if err != nil {
-		return entity.User{}, fmt.Errorf("repo - AuthRepo - GetUser - r.Builder: %w", err)
+		return entity.User{}, fmt.Errorf("AuthRepo.GetUser - r.Builder: %v", err)
 	}
 
 	var user entity.User
 	err = r.Pool.QueryRow(ctx, sql, args...).Scan(&user.Id, &user.Name, &user.Username, &user.Password, &user.Email)
 	if err != nil {
-		return entity.User{}, fmt.Errorf("repo - AuthRepo - GetUser - r.Pool.QueryRow: %w", err)
+		return entity.User{}, fmt.Errorf("AuthRepo.GetUser - r.Pool.QueryRow: %v", err)
 	}
 
 	return user, nil

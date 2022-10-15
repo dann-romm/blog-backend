@@ -32,13 +32,13 @@ func (r *authRoutes) signUp(c echo.Context) error {
 	var input signUpInput
 
 	if err := c.Bind(&input); err != nil {
-		log.Debugf("authRoutes.signUp: bind error: %s", err)
-		newErrorResponse(c, http.StatusBadRequest, "invalid input body")
+		log.Errorf("authRoutes.signUp: c.Bind: %v", err)
+		newErrorResponse(c, http.StatusBadRequest, ErrInvalidInputBody.Error())
 		return err
 	}
 
 	if err := c.Validate(input); err != nil {
-		log.Debugf("authRoutes.signUp: validate error: %s", err)
+		log.Errorf("authRoutes.signUp: c.Validate: %v", err)
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return err
 	}
@@ -50,7 +50,7 @@ func (r *authRoutes) signUp(c echo.Context) error {
 		Email:    input.Email,
 	})
 	if err != nil {
-		log.Debugf("authRoutes.signUp: create user error: %s", err)
+		log.Errorf("authRoutes.signUp: r.authService.CreateUser: %v", err)
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return err
 	}
@@ -70,13 +70,13 @@ func (r *authRoutes) signIn(c echo.Context) error {
 	var input signInInput
 
 	if err := c.Bind(&input); err != nil {
-		log.Debugf("authRoutes.signIn: bind error: %s", err)
-		newErrorResponse(c, http.StatusBadRequest, "invalid input body")
+		log.Errorf("authRoutes.signIn: c.Bind: %v", err)
+		newErrorResponse(c, http.StatusBadRequest, ErrInvalidInputBody.Error())
 		return err
 	}
 
 	if err := c.Validate(input); err != nil {
-		log.Debugf("authRoutes.signIn: validate error: %s", err)
+		log.Errorf("authRoutes.signIn: c.Validate: %v", err)
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return err
 	}
@@ -86,7 +86,7 @@ func (r *authRoutes) signIn(c echo.Context) error {
 		Password: input.Password,
 	})
 	if err != nil {
-		log.Debugf("authRoutes.signIn: generate token error: %s", err)
+		log.Errorf("authRoutes.signIn: r.authService.GenerateToken: %v", err)
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return err
 	}

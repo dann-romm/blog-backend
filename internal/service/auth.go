@@ -50,7 +50,7 @@ func (s *AuthService) CreateUser(ctx context.Context, input AuthCreateUserInput)
 
 	userId, err := s.authRepo.CreateUser(ctx, user)
 	if err != nil {
-		log.Errorf("AuthService.CreateUser: cannot create user: %v", err)
+		log.Errorf("AuthService.CreateUser - c.authRepo.CreateUser: %v", err)
 		return 0, ErrCannotCreateUser
 	}
 	return userId, nil
