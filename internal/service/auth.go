@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/golang-jwt/jwt"
+	log "github.com/sirupsen/logrus"
 	"time"
 )
 
@@ -21,6 +22,14 @@ type AuthService struct {
 	signKey        string
 	tokenTTL       time.Duration
 }
+
+var (
+	ErrCannotCreateUser = fmt.Errorf("cannot create user")
+	ErrCannotGetUser    = fmt.Errorf("cannot get user")
+	ErrCannotSignToken  = fmt.Errorf("cannot sign token")
+	ErrCannotParseToken = fmt.Errorf("cannot parse token")
+	ErrTokenClaimsType  = fmt.Errorf("token claims are not of type TokenClaims")
+)
 
 func NewAuthService(authRepo repo.Auth, passwordHasher hasher.PasswordHasher, signKey string, tokenTTL time.Duration) *AuthService {
 	return &AuthService{
@@ -39,14 +48,20 @@ func (s *AuthService) CreateUser(ctx context.Context, input AuthCreateUserInput)
 		Email:    input.Email,
 	}
 
-	return s.authRepo.CreateUser(ctx, user)
+	userId, err := s.authRepo.CreateUser(ctx, user)
+	if err != nil {
+		log.Errorf("AuthService.CreateUser: cannot create user: %v", err)
+		return 0, ErrCannotCreateUser
+	}
+	return userId, nil
 }
 
-func (s *AuthService) GenerateToken(ctx context.Context, username, password string) (string, error) {
+func (s *AuthService) GenerateToken(ctx context.Context, input AuthGenerateTokenInput) (string, error) {
 	// get user from DB
-	user, err := s.authRepo.GetUser(ctx, username, s.passwordHasher.Hash(password))
+	user, err := s.authRepo.GetUser(ctx, input.Username, s.passwordHasher.Hash(input.Password))
 	if err != nil {
-		return "", err
+		log.Errorf("AuthService.GenerateToken: cannot get user: %v", err)
+		return "", ErrCannotGetUser
 	}
 
 	// generate token
@@ -61,7 +76,8 @@ func (s *AuthService) GenerateToken(ctx context.Context, username, password stri
 	// sign token
 	tokenString, err := token.SignedString([]byte(s.signKey))
 	if err != nil {
-		return "", err
+		log.Errorf("AuthService.GenerateToken: cannot sign token: %v", err)
+		return "", ErrCannotSignToken
 	}
 
 	return tokenString, nil
@@ -77,12 +93,13 @@ func (s *AuthService) ParseToken(accessToken string) (int, error) {
 	})
 
 	if err != nil {
-		return 0, err
+		log.Errorf("AuthService.ParseToken: cannot parse token: %v", err)
+		return 0, ErrCannotParseToken
 	}
 
 	claims, ok := token.Claims.(*TokenClaims)
 	if !ok {
-		return 0, fmt.Errorf("token claims are not of type TokenClaims")
+		return 0, ErrTokenClaimsType
 	}
 
 	return claims.UserId, nil

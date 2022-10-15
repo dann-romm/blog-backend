@@ -17,6 +17,9 @@ compose-down: ### Down docker-compose
 	docker-compose down --remove-orphans
 .PHONY: compose-down
 
+compose-re: compose-down compose-up ### Restart docker-compose
+.PHONY: compose-re
+
 docker-rm-volume: ### remove docker volume
 	docker volume rm pg-data
 .PHONY: docker-rm-volume

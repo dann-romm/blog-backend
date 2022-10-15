@@ -8,6 +8,7 @@ import (
 	"blog-backend/pkg/hasher"
 	"blog-backend/pkg/httpserver"
 	"blog-backend/pkg/postgres"
+	"blog-backend/pkg/validator"
 	"fmt"
 	"github.com/labstack/echo/v4"
 	log "github.com/sirupsen/logrus"
@@ -52,7 +53,7 @@ func Run(configPath string) {
 	log.Info("Initializing handlers and routes...")
 	handler := echo.New()
 	// setup handler validator as lib validator
-	handler.Validator = NewCustomValidator()
+	handler.Validator = validator.NewCustomValidator()
 	v1.NewRouter(handler, services)
 
 	// HTTP server
@@ -79,7 +80,3 @@ func Run(configPath string) {
 		log.Error(fmt.Errorf("app - Run - httpServer.Shutdown: %w", err))
 	}
 }
-
-// [--natpf<1-N> [<rulename>],tcp|udp,[<hostip>],
-// <hostport>,[<guestip>],<guestport>]
-// [--natpf<1-N> delete <rulename>]

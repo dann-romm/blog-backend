@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+//go:generate mockgen -source=service.go -destination=mocks/service.go -package=mocks
+
 type AuthCreateUserInput struct {
 	Name     string
 	Username string
@@ -14,9 +16,14 @@ type AuthCreateUserInput struct {
 	Email    string
 }
 
+type AuthGenerateTokenInput struct {
+	Username string
+	Password string
+}
+
 type Auth interface {
 	CreateUser(ctx context.Context, input AuthCreateUserInput) (int, error)
-	GenerateToken(ctx context.Context, username, password string) (string, error)
+	GenerateToken(ctx context.Context, input AuthGenerateTokenInput) (string, error)
 	ParseToken(token string) (int, error)
 }
 
