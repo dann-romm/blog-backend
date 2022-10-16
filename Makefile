@@ -43,3 +43,14 @@ migrate-up: ### migration up
 migrate-down:
 	echo "y" | migrate -path migrations -database '$(PG_URL_LOCALHOST)?sslmode=disable' down
 .PHONY: migrate-down
+
+coverage-html:
+	go test -coverprofile=coverage.out ./...
+	go tool cover -html=coverage.out
+	rm coverage.out
+.PHONY: coverage-html
+
+coverage:
+	go test -coverprofile=coverage.out ./...
+	go tool cover -func=coverage.out
+	rm coverage.out

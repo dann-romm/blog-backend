@@ -33,7 +33,7 @@ func (r *authRoutes) signUp(c echo.Context) error {
 
 	if err := c.Bind(&input); err != nil {
 		log.Errorf("authRoutes.signUp: c.Bind: %v", err)
-		newErrorResponse(c, http.StatusBadRequest, ErrInvalidInputBody.Error())
+		newErrorResponse(c, http.StatusBadRequest, ErrInvalidRequestBody.Error())
 		return err
 	}
 
@@ -49,9 +49,14 @@ func (r *authRoutes) signUp(c echo.Context) error {
 		Password: input.Password,
 		Email:    input.Email,
 	})
+	if err == service.ErrUserAlreadyExists {
+		log.Errorf("authRoutes.signUp: r.authService.CreateUser: %v", err)
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return err
+	}
 	if err != nil {
 		log.Errorf("authRoutes.signUp: r.authService.CreateUser: %v", err)
-		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		newErrorResponse(c, http.StatusInternalServerError, "internal server error")
 		return err
 	}
 
@@ -71,7 +76,7 @@ func (r *authRoutes) signIn(c echo.Context) error {
 
 	if err := c.Bind(&input); err != nil {
 		log.Errorf("authRoutes.signIn: c.Bind: %v", err)
-		newErrorResponse(c, http.StatusBadRequest, ErrInvalidInputBody.Error())
+		newErrorResponse(c, http.StatusBadRequest, ErrInvalidRequestBody.Error())
 		return err
 	}
 
@@ -85,9 +90,14 @@ func (r *authRoutes) signIn(c echo.Context) error {
 		Username: input.Username,
 		Password: input.Password,
 	})
+	if err == service.ErrUserNotFound {
+		log.Errorf("authRoutes.signIn: r.authService.GenerateToken: %v", err)
+		newErrorResponse(c, http.StatusBadRequest, "invalid username or password")
+		return err
+	}
 	if err != nil {
 		log.Errorf("authRoutes.signIn: r.authService.GenerateToken: %v", err)
-		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		newErrorResponse(c, http.StatusInternalServerError, "internal server error")
 		return err
 	}
 

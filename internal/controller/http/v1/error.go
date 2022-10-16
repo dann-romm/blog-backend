@@ -7,9 +7,9 @@ import (
 )
 
 var (
-	ErrInvalidInputBody  = fmt.Errorf("invalid input body")
-	ErrInvalidAuthHeader = fmt.Errorf("invalid auth header")
-	ErrCannotParseToken  = fmt.Errorf("cannot parse token")
+	ErrInvalidRequestBody = fmt.Errorf("invalid request body")
+	ErrInvalidAuthHeader  = fmt.Errorf("invalid auth header")
+	ErrCannotParseToken   = fmt.Errorf("cannot parse token")
 )
 
 func newErrorResponse(c echo.Context, errStatus int, message string) {
