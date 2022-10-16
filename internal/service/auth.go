@@ -18,7 +18,7 @@ type TokenClaims struct {
 }
 
 type AuthService struct {
-	authRepo       repo.Auth
+	userRepo       repo.User
 	passwordHasher hasher.PasswordHasher
 	signKey        string
 	tokenTTL       time.Duration
@@ -34,9 +34,9 @@ var (
 	ErrUserNotFound      = fmt.Errorf("user not found")
 )
 
-func NewAuthService(authRepo repo.Auth, passwordHasher hasher.PasswordHasher, signKey string, tokenTTL time.Duration) *AuthService {
+func NewAuthService(userRepo repo.User, passwordHasher hasher.PasswordHasher, signKey string, tokenTTL time.Duration) *AuthService {
 	return &AuthService{
-		authRepo:       authRepo,
+		userRepo:       userRepo,
 		passwordHasher: passwordHasher,
 		signKey:        signKey,
 		tokenTTL:       tokenTTL,
@@ -51,12 +51,12 @@ func (s *AuthService) CreateUser(ctx context.Context, input AuthCreateUserInput)
 		Email:    input.Email,
 	}
 
-	userId, err := s.authRepo.CreateUser(ctx, user)
+	userId, err := s.userRepo.CreateUser(ctx, user)
 	if err == repoerrs.ErrUserAlreadyExists {
 		return 0, ErrUserAlreadyExists
 	}
 	if err != nil {
-		log.Errorf("AuthService.CreateUser - c.authRepo.CreateUser: %v", err)
+		log.Errorf("AuthService.CreateUser - c.userRepo.CreateUser: %v", err)
 		return 0, ErrCannotCreateUser
 	}
 	return userId, nil
@@ -64,7 +64,7 @@ func (s *AuthService) CreateUser(ctx context.Context, input AuthCreateUserInput)
 
 func (s *AuthService) GenerateToken(ctx context.Context, input AuthGenerateTokenInput) (string, error) {
 	// get user from DB
-	user, err := s.authRepo.GetUser(ctx, input.Username, s.passwordHasher.Hash(input.Password))
+	user, err := s.userRepo.GetUserByUsernameAndPassword(ctx, input.Username, s.passwordHasher.Hash(input.Password))
 	if err == repoerrs.ErrUserNotFound {
 		return "", ErrUserNotFound
 	}

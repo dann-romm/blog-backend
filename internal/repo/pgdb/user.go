@@ -12,15 +12,15 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type AuthRepo struct {
+type UserRepo struct {
 	*postgres.Postgres
 }
 
-func NewAuthRepo(pg *postgres.Postgres) *AuthRepo {
-	return &AuthRepo{pg}
+func NewUserRepo(pg *postgres.Postgres) *UserRepo {
+	return &UserRepo{pg}
 }
 
-func (r *AuthRepo) CreateUser(ctx context.Context, user entity.User) (int, error) {
+func (r *UserRepo) CreateUser(ctx context.Context, user entity.User) (int, error) {
 	sql, args, err := r.Builder.
 		Insert("users").
 		Columns("name", "username", "password", "email").
@@ -29,8 +29,8 @@ func (r *AuthRepo) CreateUser(ctx context.Context, user entity.User) (int, error
 		ToSql()
 
 	if err != nil {
-		log.Errorf("AuthRepo.CreateUser - r.Builder: %v", err)
-		return 0, fmt.Errorf("AuthRepo.CreateUser - r.Builder: %v", err)
+		log.Errorf("UserRepo.CreateUser - r.Builder: %v", err)
+		return 0, fmt.Errorf("UserRepo.CreateUser - r.Builder: %v", err)
 	}
 
 	var id int
@@ -42,33 +42,33 @@ func (r *AuthRepo) CreateUser(ctx context.Context, user entity.User) (int, error
 				return 0, repoerrs.ErrUserAlreadyExists
 			}
 		}
-		log.Errorf("AuthRepo.CreateUser - r.Pool.QueryRow: %v", err)
-		return 0, fmt.Errorf("AuthRepo.CreateUser - r.Pool.QueryRow: %v", err)
+		log.Errorf("UserRepo.CreateUser - r.Pool.QueryRow: %v", err)
+		return 0, fmt.Errorf("UserRepo.CreateUser - r.Pool.QueryRow: %v", err)
 	}
 
 	return id, nil
 }
 
-func (r *AuthRepo) GetUser(ctx context.Context, username, passwordHash string) (entity.User, error) {
+func (r *UserRepo) GetUserByUsernameAndPassword(ctx context.Context, username, password string) (entity.User, error) {
 	sql, args, err := r.Builder.
 		Select("id", "name", "username", "password", "email").
 		From("users").
-		Where("username = ? AND password = ?", username, passwordHash).
+		Where("username = ? AND password = ?", username, password).
 		ToSql()
 
 	if err != nil {
-		log.Errorf("AuthRepo.GetUser - r.Builder: %v", err)
-		return entity.User{}, fmt.Errorf("AuthRepo.GetUser - r.Builder: %v", err)
+		log.Errorf("UserRepo.GetUserByUsernameAndPassword - r.Builder: %v", err)
+		return entity.User{}, fmt.Errorf("UserRepo.GetUserByUsernameAndPassword - r.Builder: %v", err)
 	}
 
 	var user entity.User
 	err = r.Pool.QueryRow(ctx, sql, args...).Scan(&user.Id, &user.Name, &user.Username, &user.Password, &user.Email)
 	if err != nil {
-		log.Errorf("AuthRepo.GetUser - r.Pool.QueryRow: %v", err)
+		log.Errorf("UserRepo.GetUserByUsernameAndPassword - r.Pool.QueryRow: %v", err)
 		if err == pgx.ErrNoRows {
 			return entity.User{}, repoerrs.ErrUserNotFound
 		}
-		return entity.User{}, fmt.Errorf("AuthRepo.GetUser - r.Pool.QueryRow: %v", err)
+		return entity.User{}, fmt.Errorf("UserRepo.GetUserByUsernameAndPassword - r.Pool.QueryRow: %v", err)
 	}
 
 	return user, nil

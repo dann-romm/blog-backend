@@ -7,17 +7,17 @@ import (
 	"context"
 )
 
-type Auth interface {
+type User interface {
 	CreateUser(ctx context.Context, user entity.User) (int, error)
-	GetUser(ctx context.Context, username, passwordHash string) (entity.User, error)
+	GetUserByUsernameAndPassword(ctx context.Context, username, password string) (entity.User, error)
 }
 
 type Repositories struct {
-	Auth
+	User
 }
 
 func NewRepositories(pg *postgres.Postgres) *Repositories {
 	return &Repositories{
-		Auth: pgdb.NewAuthRepo(pg),
+		User: pgdb.NewUserRepo(pg),
 	}
 }
