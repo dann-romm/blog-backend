@@ -3,18 +3,20 @@
 -- create users table
 create table users
 (
-    id               serial primary key,
-    name             varchar(255)               not null,
-    username         varchar(255)               not null unique,
-    password         varchar(255)               not null,
-    email            varchar(255)               not null,
-    created_at       timestamp    default now() not null,
-    updated_at       timestamp    default now() not null,
-    description      varchar(255) default ''    not null,
-    articles_count   int          default 0     not null,
-    comments_count   int          default 0     not null,
-    followers_count  int          default 0     not null,
-    followings_count int          default 0     not null
+    id                       serial primary key,
+    name                     varchar(255)               not null,
+    username                 varchar(255)               not null unique,
+    password                 varchar(255)               not null,
+    email                    varchar(255)               not null,
+    created_at               timestamp    default now() not null,
+    updated_at               timestamp    default now() not null,
+    description              varchar(255) default ''    not null,
+    articles_count           int          default 0     not null,
+    comments_count           int          default 0     not null,
+    favorites_articles_count int          default 0     not null,
+    favorites_comments_count int          default 0     not null,
+    followers_count          int          default 0     not null,
+    followings_count         int          default 0     not null
 );
 
 -- create articles table
