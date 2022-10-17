@@ -1,10 +1,6 @@
 include .env
 export
 
-# rewrite PH_HOST env variable
-
-
-
 .PHONY: help
 help: ## Display this help screen
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
@@ -40,9 +36,12 @@ migrate-up: ### migration up
 	migrate -path migrations -database '$(PG_URL_LOCALHOST)?sslmode=disable' up
 .PHONY: migrate-up
 
-migrate-down:
+migrate-down: ### migration down
 	echo "y" | migrate -path migrations -database '$(PG_URL_LOCALHOST)?sslmode=disable' down
 .PHONY: migrate-down
+
+test: ### run test
+	go test -v ./...
 
 coverage-html:
 	go test -coverprofile=coverage.out ./...
@@ -54,3 +53,4 @@ coverage:
 	go test -coverprofile=coverage.out ./...
 	go tool cover -func=coverage.out
 	rm coverage.out
+.PHONY: coverage
