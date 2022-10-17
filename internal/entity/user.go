@@ -10,6 +10,7 @@ type User struct {
 	Email                  string    `db:"email"`
 	CreatedAt              time.Time `db:"created_at"`
 	UpdatedAt              time.Time `db:"updated_at"`
+	Role                   RoleType  `db:"role"`
 	Description            string    `db:"description"`
 	ArticlesCount          int       `db:"articles_count"`
 	CommentsCount          int       `db:"comments_count"`

@@ -10,6 +10,7 @@ create table users
     email                    varchar(255)               not null,
     created_at               timestamp    default now() not null,
     updated_at               timestamp    default now() not null,
+    role                     varchar(255)               not null,
     description              varchar(255) default ''    not null,
     articles_count           int          default 0     not null,
     comments_count           int          default 0     not null,

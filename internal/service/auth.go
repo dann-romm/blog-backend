@@ -14,7 +14,8 @@ import (
 
 type TokenClaims struct {
 	jwt.StandardClaims
-	UserId int `json:"user_id"`
+	UserId int
+	Role   entity.RoleType
 }
 
 type AuthService struct {
@@ -49,6 +50,7 @@ func (s *AuthService) CreateUser(ctx context.Context, input AuthCreateUserInput)
 		Username: input.Username,
 		Password: s.passwordHasher.Hash(input.Password),
 		Email:    input.Email,
+		Role:     entity.RoleUser,
 	}
 
 	userId, err := s.userRepo.CreateUser(ctx, user)
@@ -80,6 +82,7 @@ func (s *AuthService) GenerateToken(ctx context.Context, input AuthGenerateToken
 			IssuedAt:  time.Now().Unix(),
 		},
 		UserId: user.Id,
+		Role:   user.Role,
 	})
 
 	// sign token
@@ -93,6 +96,15 @@ func (s *AuthService) GenerateToken(ctx context.Context, input AuthGenerateToken
 }
 
 func (s *AuthService) ParseToken(accessToken string) (int, error) {
+	claims, err := s.parseToken(accessToken)
+	if err != nil {
+		return 0, err
+	}
+
+	return claims.UserId, nil
+}
+
+func (s *AuthService) parseToken(accessToken string) (*TokenClaims, error) {
 	token, err := jwt.ParseWithClaims(accessToken, &TokenClaims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -102,14 +114,13 @@ func (s *AuthService) ParseToken(accessToken string) (int, error) {
 	})
 
 	if err != nil {
-		log.Errorf("AuthService.ParseToken: cannot parse token: %v", err)
-		return 0, ErrCannotParseToken
+		return nil, ErrCannotParseToken
 	}
 
 	claims, ok := token.Claims.(*TokenClaims)
 	if !ok {
-		return 0, ErrTokenClaimsType
+		return nil, ErrTokenClaimsType
 	}
 
-	return claims.UserId, nil
+	return claims, nil
 }
