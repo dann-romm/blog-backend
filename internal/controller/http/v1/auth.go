@@ -3,7 +3,6 @@ package v1
 import (
 	"blog-backend/internal/service"
 	"github.com/labstack/echo/v4"
-	log "github.com/sirupsen/logrus"
 	"net/http"
 )
 
@@ -32,13 +31,11 @@ func (r *authRoutes) signUp(c echo.Context) error {
 	var input signUpInput
 
 	if err := c.Bind(&input); err != nil {
-		log.Errorf("authRoutes.signUp: c.Bind: %v", err)
 		newErrorResponse(c, http.StatusBadRequest, ErrInvalidRequestBody.Error())
 		return err
 	}
 
 	if err := c.Validate(input); err != nil {
-		log.Errorf("authRoutes.signUp: c.Validate: %v", err)
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return err
 	}
@@ -50,12 +47,10 @@ func (r *authRoutes) signUp(c echo.Context) error {
 		Email:    input.Email,
 	})
 	if err == service.ErrUserAlreadyExists {
-		log.Errorf("authRoutes.signUp: r.authService.CreateUser: %v", err)
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return err
 	}
 	if err != nil {
-		log.Errorf("authRoutes.signUp: r.authService.CreateUser: %v", err)
 		newErrorResponse(c, http.StatusInternalServerError, "internal server error")
 		return err
 	}
@@ -75,13 +70,11 @@ func (r *authRoutes) signIn(c echo.Context) error {
 	var input signInInput
 
 	if err := c.Bind(&input); err != nil {
-		log.Errorf("authRoutes.signIn: c.Bind: %v", err)
 		newErrorResponse(c, http.StatusBadRequest, ErrInvalidRequestBody.Error())
 		return err
 	}
 
 	if err := c.Validate(input); err != nil {
-		log.Errorf("authRoutes.signIn: c.Validate: %v", err)
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return err
 	}
@@ -91,12 +84,10 @@ func (r *authRoutes) signIn(c echo.Context) error {
 		Password: input.Password,
 	})
 	if err == service.ErrUserNotFound {
-		log.Errorf("authRoutes.signIn: r.authService.GenerateToken: %v", err)
 		newErrorResponse(c, http.StatusBadRequest, "invalid username or password")
 		return err
 	}
 	if err != nil {
-		log.Errorf("authRoutes.signIn: r.authService.GenerateToken: %v", err)
 		newErrorResponse(c, http.StatusInternalServerError, "internal server error")
 		return err
 	}
