@@ -1,27 +1,29 @@
 -- migration down file for blog_backend database
 
-drop table if exists articles_views;
+drop table articles_views;
 
-drop table if exists votes_comments_down;
+drop table votes_comments_down;
 
-drop table if exists votes_comments_up;
+drop table votes_comments_up;
 
-drop table if exists votes_articles_down;
+drop table votes_articles_down;
 
-drop table if exists votes_articles_up;
+drop table votes_articles_up;
 
-drop table if exists articles_tags;
+drop table articles_tags;
 
-drop table if exists tags;
+drop table tags;
 
-drop table if exists users_comments_favorites;
+drop table users_comments_favorites;
 
-drop table if exists users_articles_favorites;
+drop table users_articles_favorites;
 
-drop table if exists users_followers;
+drop table users_followers;
 
-drop table if exists comments;
+drop table comments;
 
-drop table if exists articles;
+drop table articles;
 
-drop table if exists users;
+drop table users;
+
+drop type role_type;

@@ -59,13 +59,3 @@ func (s *Server) Shutdown() error {
 
 	return s.server.Shutdown(ctx)
 }
-
-// func (s *Server) Run(port string, v1 http.Handler) error {
-// 	s.server = &http.Server{
-// 		Addr:         ":" + port,
-// 		Handler:      v1,
-// 		ReadTimeout:  1 * time.Second,
-// 		WriteTimeout: 1 * time.Second,
-// 	}
-// 	return s.server.ListenAndServe()
-// }

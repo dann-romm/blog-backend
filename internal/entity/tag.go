@@ -1,6 +1,8 @@
 package entity
 
+import "github.com/google/uuid"
+
 type Tag struct {
-	Id          int    `db:"id"`
-	Description string `db:"description"`
+	Id          uuid.UUID `db:"id"`
+	Description string    `db:"description"`
 }

@@ -1,9 +1,11 @@
 package service
 
 import (
+	"blog-backend/internal/entity"
 	"blog-backend/internal/repo"
 	"blog-backend/pkg/hasher"
 	"context"
+	"github.com/google/uuid"
 	"time"
 )
 
@@ -22,9 +24,9 @@ type AuthGenerateTokenInput struct {
 }
 
 type Auth interface {
-	CreateUser(ctx context.Context, input AuthCreateUserInput) (int, error)
+	CreateUser(ctx context.Context, input AuthCreateUserInput) (uuid.UUID, error)
 	GenerateToken(ctx context.Context, input AuthGenerateTokenInput) (string, error)
-	ParseToken(token string) (int, error)
+	ParseToken(token string) (uuid.UUID, entity.RoleType, error)
 }
 
 type Services struct {

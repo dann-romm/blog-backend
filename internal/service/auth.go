@@ -8,14 +8,15 @@ import (
 	"context"
 	"fmt"
 	"github.com/golang-jwt/jwt"
+	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	"time"
 )
 
 type TokenClaims struct {
 	jwt.StandardClaims
-	UserId int
-	Role   entity.RoleType
+	UserID uuid.UUID       `json:"user_id"`
+	Role   entity.RoleType `json:"role"`
 }
 
 type AuthService struct {
@@ -44,7 +45,7 @@ func NewAuthService(userRepo repo.User, passwordHasher hasher.PasswordHasher, si
 	}
 }
 
-func (s *AuthService) CreateUser(ctx context.Context, input AuthCreateUserInput) (int, error) {
+func (s *AuthService) CreateUser(ctx context.Context, input AuthCreateUserInput) (uuid.UUID, error) {
 	user := entity.User{
 		Name:     input.Name,
 		Username: input.Username,
@@ -53,15 +54,14 @@ func (s *AuthService) CreateUser(ctx context.Context, input AuthCreateUserInput)
 		Role:     entity.RoleUser,
 	}
 
-	userId, err := s.userRepo.CreateUser(ctx, user)
+	userID, err := s.userRepo.CreateUser(ctx, user)
 	if err == repoerrs.ErrUserAlreadyExists {
-		return 0, ErrUserAlreadyExists
+		return uuid.UUID{}, ErrUserAlreadyExists
 	}
 	if err != nil {
-		log.Errorf("AuthService.CreateUser - c.userRepo.CreateUser: %v", err)
-		return 0, ErrCannotCreateUser
+		return uuid.UUID{}, ErrCannotCreateUser
 	}
-	return userId, nil
+	return userID, nil
 }
 
 func (s *AuthService) GenerateToken(ctx context.Context, input AuthGenerateTokenInput) (string, error) {
@@ -71,7 +71,6 @@ func (s *AuthService) GenerateToken(ctx context.Context, input AuthGenerateToken
 		return "", ErrUserNotFound
 	}
 	if err != nil {
-		log.Errorf("AuthService.GenerateToken: cannot get user: %v", err)
 		return "", ErrCannotGetUser
 	}
 
@@ -81,7 +80,7 @@ func (s *AuthService) GenerateToken(ctx context.Context, input AuthGenerateToken
 			ExpiresAt: time.Now().Add(s.tokenTTL).Unix(),
 			IssuedAt:  time.Now().Unix(),
 		},
-		UserId: user.Id,
+		UserID: user.ID,
 		Role:   user.Role,
 	})
 
@@ -95,13 +94,13 @@ func (s *AuthService) GenerateToken(ctx context.Context, input AuthGenerateToken
 	return tokenString, nil
 }
 
-func (s *AuthService) ParseToken(accessToken string) (int, error) {
+func (s *AuthService) ParseToken(accessToken string) (uuid.UUID, entity.RoleType, error) {
 	claims, err := s.parseToken(accessToken)
 	if err != nil {
-		return 0, err
+		return uuid.UUID{}, "", err
 	}
 
-	return claims.UserId, nil
+	return claims.UserID, claims.Role, nil
 }
 
 func (s *AuthService) parseToken(accessToken string) (*TokenClaims, error) {

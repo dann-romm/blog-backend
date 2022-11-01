@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
 	log "github.com/sirupsen/logrus"
@@ -20,56 +21,46 @@ func NewUserRepo(pg *postgres.Postgres) *UserRepo {
 	return &UserRepo{pg}
 }
 
-func (r *UserRepo) CreateUser(ctx context.Context, user entity.User) (int, error) {
-	sql, args, err := r.Builder.
+func (r *UserRepo) CreateUser(ctx context.Context, user entity.User) (uuid.UUID, error) {
+	sql, args, _ := r.Builder.
 		Insert("users").
 		Columns("name", "username", "password", "email").
 		Values(user.Name, user.Username, user.Password, user.Email).
 		Suffix("RETURNING id").
 		ToSql()
 
-	if err != nil {
-		log.Errorf("UserRepo.CreateUser - r.Builder: %v", err)
-		return 0, fmt.Errorf("UserRepo.CreateUser - r.Builder: %v", err)
-	}
-
-	var id int
-	err = r.Pool.QueryRow(ctx, sql, args...).Scan(&id)
+	var id uuid.UUID
+	err := r.Pool.QueryRow(ctx, sql, args...).Scan(&id)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if ok := errors.As(err, &pgErr); ok {
 			if pgErr.Code == "23505" {
-				return 0, repoerrs.ErrUserAlreadyExists
+				return uuid.UUID{}, repoerrs.ErrUserAlreadyExists
 			}
 		}
-		log.Errorf("UserRepo.CreateUser - r.Pool.QueryRow: %v", err)
-		return 0, fmt.Errorf("UserRepo.CreateUser - r.Pool.QueryRow: %v", err)
+		return uuid.UUID{}, fmt.Errorf("UserRepo.CreateUser - r.Pool.QueryRow: %v", err)
 	}
 
 	return id, nil
 }
 
 func (r *UserRepo) GetUserByUsernameAndPassword(ctx context.Context, username, password string) (entity.User, error) {
-	sql, args, err := r.Builder.
+	sql, args, _ := r.Builder.
 		Select("*").
 		From("users").
 		Where("username = ? AND password = ?", username, password).
 		ToSql()
 
-	if err != nil {
-		log.Errorf("UserRepo.GetUserByUsernameAndPassword - r.Builder: %v", err)
-		return entity.User{}, fmt.Errorf("UserRepo.GetUserByUsernameAndPassword - r.Builder: %v", err)
-	}
-
 	var user entity.User
-	err = r.Pool.QueryRow(ctx, sql, args...).Scan(
-		&user.Id,
+	err := r.Pool.QueryRow(ctx, sql, args...).Scan(
+		&user.ID,
 		&user.Name,
 		&user.Username,
 		&user.Password,
 		&user.Email,
 		&user.CreatedAt,
 		&user.UpdatedAt,
+		&user.Role,
 		&user.Description,
 		&user.ArticlesCount,
 		&user.CommentsCount,
@@ -89,27 +80,23 @@ func (r *UserRepo) GetUserByUsernameAndPassword(ctx context.Context, username, p
 	return user, nil
 }
 
-func (r *UserRepo) GetUserById(ctx context.Context, id int) (entity.User, error) {
-	sql, args, err := r.Builder.
+func (r *UserRepo) GetUserById(ctx context.Context, id uuid.UUID) (entity.User, error) {
+	sql, args, _ := r.Builder.
 		Select("*").
 		From("users").
 		Where("id = ?", id).
 		ToSql()
 
-	if err != nil {
-		log.Errorf("UserRepo.GetUserById - r.Builder: %v", err)
-		return entity.User{}, fmt.Errorf("UserRepo.GetUserById - r.Builder: %v", err)
-	}
-
 	var user entity.User
-	err = r.Pool.QueryRow(ctx, sql, args...).Scan(
-		&user.Id,
+	err := r.Pool.QueryRow(ctx, sql, args...).Scan(
+		&user.ID,
 		&user.Name,
 		&user.Username,
 		&user.Password,
 		&user.Email,
 		&user.CreatedAt,
 		&user.UpdatedAt,
+		&user.Role,
 		&user.Description,
 		&user.ArticlesCount,
 		&user.CommentsCount,
@@ -130,26 +117,22 @@ func (r *UserRepo) GetUserById(ctx context.Context, id int) (entity.User, error)
 }
 
 func (r *UserRepo) GetUserByUsername(ctx context.Context, username string) (entity.User, error) {
-	sql, args, err := r.Builder.
+	sql, args, _ := r.Builder.
 		Select("*").
 		From("users").
 		Where("username = ?", username).
 		ToSql()
 
-	if err != nil {
-		log.Errorf("UserRepo.GetUserByUsername - r.Builder: %v", err)
-		return entity.User{}, fmt.Errorf("UserRepo.GetUserByUsername - r.Builder: %v", err)
-	}
-
 	var user entity.User
-	err = r.Pool.QueryRow(ctx, sql, args...).Scan(
-		&user.Id,
+	err := r.Pool.QueryRow(ctx, sql, args...).Scan(
+		&user.ID,
 		&user.Name,
 		&user.Username,
 		&user.Password,
 		&user.Email,
 		&user.CreatedAt,
 		&user.UpdatedAt,
+		&user.Role,
 		&user.Description,
 		&user.ArticlesCount,
 		&user.CommentsCount,
