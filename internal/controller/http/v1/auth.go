@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"blog-backend/internal/entity"
 	"blog-backend/internal/service"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -17,6 +18,8 @@ func newAuthRoutes(g *echo.Group, authService service.Auth) {
 
 	g.POST("/sign-up", r.signUp)
 	g.POST("/sign-in", r.signIn)
+
+	g.GET("/test", r.test, NewAuthMiddleware(authService).Authorize)
 }
 
 type signUpInput struct {
@@ -30,13 +33,7 @@ type signUpInput struct {
 func (r *authRoutes) signUp(c echo.Context) error {
 	var input signUpInput
 
-	if err := c.Bind(&input); err != nil {
-		newErrorResponse(c, http.StatusBadRequest, ErrInvalidRequestBody.Error())
-		return err
-	}
-
-	if err := c.Validate(input); err != nil {
-		newErrorResponse(c, http.StatusBadRequest, err.Error())
+	if err := BindAndValidate(c, &input); err != nil {
 		return err
 	}
 
@@ -94,5 +91,11 @@ func (r *authRoutes) signIn(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		"token": token,
+	})
+}
+
+func (r *authRoutes) test(c echo.Context) error {
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"role": c.Get(userRoleCtx).(entity.RoleType),
 	})
 }

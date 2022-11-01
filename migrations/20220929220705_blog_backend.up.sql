@@ -1,11 +1,13 @@
 -- migration up file for blog_backend database
 
+create extension if not exists "uuid-ossp";
+
 -- make role be an enum type
 CREATE TYPE role_type AS ENUM (
     'user',
     'moderator',
     'admin'
-);
+    );
 
 -- create users table
 create table users
@@ -51,7 +53,7 @@ create table comments
     id               uuid primary key default uuid_generate_v4(),
     author_id        uuid                           not null,
     article_id       uuid                           not null,
-    parent_id        int              default null,
+    parent_id        uuid             default null,
     content          text                           not null,
     created_at       timestamp        default now() not null,
     updated_at       timestamp        default now() not null,
