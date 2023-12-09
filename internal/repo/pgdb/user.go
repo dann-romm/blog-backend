@@ -44,6 +44,40 @@ func (r *UserRepo) CreateUser(ctx context.Context, user entity.User) (uuid.UUID,
 	return id, nil
 }
 
+func (r *UserRepo) UpdateUserPassword(ctx context.Context, userID uuid.UUID, password string) error {
+	sql, args, _ := r.Builder.
+		Update("users").
+		Set("password", password).
+		Set("updated_at", "NOW()").
+		Where("id = ?", userID).
+		ToSql()
+
+	_, err := r.Pool.Exec(ctx, sql, args...)
+	if err != nil {
+		log.Errorf("UserRepo.UpdateUserPassword - r.Pool.Exec: %v", err)
+		return fmt.Errorf("UserRepo.UpdateUserPassword - r.Pool.Exec: %v", err)
+	}
+
+	return nil
+}
+
+func (r *UserRepo) UpdateUserEmail(ctx context.Context, userID uuid.UUID, email string) error {
+	sql, args, _ := r.Builder.
+		Update("users").
+		Set("email", email).
+		Set("updated_at", "NOW()").
+		Where("id = ?", userID).
+		ToSql()
+
+	_, err := r.Pool.Exec(ctx, sql, args...)
+	if err != nil {
+		log.Errorf("UserRepo.UpdateUserEmail - r.Pool.Exec: %v", err)
+		return fmt.Errorf("UserRepo.UpdateUserEmail - r.Pool.Exec: %v", err)
+	}
+
+	return nil
+}
+
 func (r *UserRepo) GetUserByUsernameAndPassword(ctx context.Context, username, password string) (entity.User, error) {
 	sql, args, _ := r.Builder.
 		Select("*").
