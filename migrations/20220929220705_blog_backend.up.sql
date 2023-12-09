@@ -13,14 +13,14 @@ CREATE TYPE role_type AS ENUM (
 create table users
 (
     id                       uuid primary key default uuid_generate_v4(),
-    name                     varchar(255)                    not null,
-    username                 varchar(255)                    not null unique,
-    password                 varchar(255)                    not null,
-    email                    varchar(255)                    not null,
+    name                     varchar(256)                    not null,
+    username                 varchar(256)                    not null unique,
+    password                 varchar(256)                    not null,
+    email                    varchar(256)                    not null,
     created_at               timestamp        default now()  not null,
     updated_at               timestamp        default now()  not null,
     role                     role_type        default 'user' not null,
-    description              varchar(255)     default ''     not null,
+    description              varchar(256)     default ''     not null,
     articles_count           int              default 0      not null,
     comments_count           int              default 0      not null,
     favorites_articles_count int              default 0      not null,
@@ -34,8 +34,8 @@ create table articles
 (
     id               uuid primary key default uuid_generate_v4(),
     author_id        uuid                           not null,
-    title            varchar(255)                   not null,
-    description      varchar(255)                   not null,
+    title            varchar(256)                   not null,
+    description      varchar(256)                   not null,
     content          text                           not null,
     created_at       timestamp        default now() not null,
     updated_at       timestamp        default now() not null,
@@ -98,7 +98,7 @@ create table users_comments_favorites
 create table tags
 (
     id          uuid primary key default uuid_generate_v4(),
-    description varchar(255) not null
+    description varchar(256) not null
 );
 
 -- create articles_tags table
