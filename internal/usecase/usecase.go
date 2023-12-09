@@ -1,4 +1,4 @@
-package service
+package usecase
 
 import (
 	"blog-backend/internal/entity"
@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-//go:generate mockgen -source=service.go -destination=mocks/service.go -package=mocks
+//go:generate mockgen -source=usecase.go -destination=mocks/usecase.go -package=mocks
 
 type AuthCreateUserInput struct {
 	Name     string
@@ -29,11 +29,11 @@ type Auth interface {
 	ParseToken(token string) (uuid.UUID, entity.RoleType, error)
 }
 
-type Services struct {
+type UseCases struct {
 	Auth Auth
 }
 
-type ServicesDependencies struct {
+type UseCasesDependencies struct {
 	Repos  *repo.Repositories
 	Hasher hasher.PasswordHasher
 
@@ -41,8 +41,8 @@ type ServicesDependencies struct {
 	TokenTTL time.Duration
 }
 
-func NewServices(deps ServicesDependencies) *Services {
-	return &Services{
-		Auth: NewAuthService(deps.Repos, deps.Hasher, deps.SignKey, deps.TokenTTL),
+func NewUseCases(deps UseCasesDependencies) *UseCases {
+	return &UseCases{
+		Auth: NewAuthUseCase(deps.Repos, deps.Hasher, deps.SignKey, deps.TokenTTL),
 	}
 }

@@ -4,7 +4,7 @@ import (
 	"blog-backend/config"
 	v1 "blog-backend/internal/controller/http/v1"
 	"blog-backend/internal/repo"
-	"blog-backend/internal/service"
+	"blog-backend/internal/usecase"
 	"blog-backend/pkg/hasher"
 	"blog-backend/pkg/httpserver"
 	"blog-backend/pkg/postgres"
@@ -31,7 +31,7 @@ func Run(configPath string) {
 	log.Info("Initializing postgres...")
 	pg, err := postgres.New(cfg.PG.URL, postgres.MaxPoolSize(cfg.PG.MaxPoolSize))
 	if err != nil {
-		log.Fatal(fmt.Errorf("app - Run - pgdb.NewServices: %w", err))
+		log.Fatal(fmt.Errorf("app - Run - pgdb.NewUseCases: %w", err))
 	}
 	defer pg.Close()
 
@@ -39,22 +39,22 @@ func Run(configPath string) {
 	log.Info("Initializing repositories...")
 	repositories := repo.NewRepositories(pg)
 
-	// Services dependencies
-	log.Info("Initializing services...")
-	deps := service.ServicesDependencies{
+	// UseCases dependencies
+	log.Info("Initializing useCases...")
+	deps := usecase.UseCasesDependencies{
 		Repos:    repositories,
 		Hasher:   hasher.NewSHA1Hasher(cfg.Hasher.Salt),
 		SignKey:  cfg.JWT.SignKey,
 		TokenTTL: cfg.JWT.TokenTTL,
 	}
-	services := service.NewServices(deps)
+	useCases := usecase.NewUseCases(deps)
 
 	// Echo handler
 	log.Info("Initializing handlers and routes...")
 	handler := echo.New()
 	// setup handler validator as lib validator
 	handler.Validator = validator.NewCustomValidator()
-	v1.NewRouter(handler, services)
+	v1.NewRouter(handler, useCases)
 
 	// HTTP server
 	log.Info("Starting http server...")

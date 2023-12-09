@@ -2,7 +2,7 @@ package v1
 
 import (
 	"blog-backend/internal/entity"
-	"blog-backend/internal/service"
+	"blog-backend/internal/usecase"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"strings"
@@ -14,11 +14,11 @@ const (
 )
 
 type AuthMiddleware struct {
-	authService service.Auth
+	authUseCase usecase.Auth
 }
 
-func NewAuthMiddleware(authService service.Auth) *AuthMiddleware {
-	return &AuthMiddleware{authService: authService}
+func NewAuthMiddleware(authUseCase usecase.Auth) *AuthMiddleware {
+	return &AuthMiddleware{authUseCase: authUseCase}
 }
 
 // Authorize - проверка авторизации пользователя
@@ -32,7 +32,7 @@ func (h *AuthMiddleware) Authorize(next echo.HandlerFunc) echo.HandlerFunc {
 			return next(c)
 		}
 
-		userID, role, err := h.authService.ParseToken(token)
+		userID, role, err := h.authUseCase.ParseToken(token)
 		if err != nil {
 			c.Set(userRoleCtx, entity.RoleGuest)
 			return next(c)

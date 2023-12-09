@@ -1,4 +1,4 @@
-package service
+package usecase
 
 import (
 	"blog-backend/internal/entity"
@@ -19,7 +19,7 @@ type TokenClaims struct {
 	Role   entity.RoleType `json:"role"`
 }
 
-type AuthService struct {
+type AuthUseCase struct {
 	userRepo       repo.User
 	passwordHasher hasher.PasswordHasher
 	signKey        string
@@ -36,8 +36,8 @@ var (
 	ErrUserNotFound      = fmt.Errorf("user not found")
 )
 
-func NewAuthService(userRepo repo.User, passwordHasher hasher.PasswordHasher, signKey string, tokenTTL time.Duration) *AuthService {
-	return &AuthService{
+func NewAuthUseCase(userRepo repo.User, passwordHasher hasher.PasswordHasher, signKey string, tokenTTL time.Duration) *AuthUseCase {
+	return &AuthUseCase{
 		userRepo:       userRepo,
 		passwordHasher: passwordHasher,
 		signKey:        signKey,
@@ -45,7 +45,7 @@ func NewAuthService(userRepo repo.User, passwordHasher hasher.PasswordHasher, si
 	}
 }
 
-func (s *AuthService) CreateUser(ctx context.Context, input AuthCreateUserInput) (uuid.UUID, error) {
+func (s *AuthUseCase) CreateUser(ctx context.Context, input AuthCreateUserInput) (uuid.UUID, error) {
 	user := entity.User{
 		Name:     input.Name,
 		Username: input.Username,
@@ -64,7 +64,7 @@ func (s *AuthService) CreateUser(ctx context.Context, input AuthCreateUserInput)
 	return userID, nil
 }
 
-func (s *AuthService) GenerateToken(ctx context.Context, input AuthGenerateTokenInput) (string, error) {
+func (s *AuthUseCase) GenerateToken(ctx context.Context, input AuthGenerateTokenInput) (string, error) {
 	// get user from DB
 	user, err := s.userRepo.GetUserByUsernameAndPassword(ctx, input.Username, s.passwordHasher.Hash(input.Password))
 	if err == repoerrs.ErrUserNotFound {
@@ -87,14 +87,14 @@ func (s *AuthService) GenerateToken(ctx context.Context, input AuthGenerateToken
 	// sign token
 	tokenString, err := token.SignedString([]byte(s.signKey))
 	if err != nil {
-		log.Errorf("AuthService.GenerateToken: cannot sign token: %v", err)
+		log.Errorf("AuthUseCase.GenerateToken: cannot sign token: %v", err)
 		return "", ErrCannotSignToken
 	}
 
 	return tokenString, nil
 }
 
-func (s *AuthService) ParseToken(accessToken string) (uuid.UUID, entity.RoleType, error) {
+func (s *AuthUseCase) ParseToken(accessToken string) (uuid.UUID, entity.RoleType, error) {
 	claims, err := s.parseToken(accessToken)
 	if err != nil {
 		return uuid.UUID{}, "", err
@@ -103,7 +103,7 @@ func (s *AuthService) ParseToken(accessToken string) (uuid.UUID, entity.RoleType
 	return claims.UserID, claims.Role, nil
 }
 
-func (s *AuthService) parseToken(accessToken string) (*TokenClaims, error) {
+func (s *AuthUseCase) parseToken(accessToken string) (*TokenClaims, error) {
 	token, err := jwt.ParseWithClaims(accessToken, &TokenClaims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])

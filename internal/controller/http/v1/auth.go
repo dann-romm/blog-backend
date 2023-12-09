@@ -2,24 +2,24 @@ package v1
 
 import (
 	"blog-backend/internal/entity"
-	"blog-backend/internal/service"
+	"blog-backend/internal/usecase"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
 
 type authRoutes struct {
-	authService service.Auth
+	authUseCase usecase.Auth
 }
 
-func newAuthRoutes(g *echo.Group, authService service.Auth) {
+func newAuthRoutes(g *echo.Group, authUseCase usecase.Auth) {
 	r := &authRoutes{
-		authService: authService,
+		authUseCase: authUseCase,
 	}
 
 	g.POST("/sign-up", r.signUp)
 	g.POST("/sign-in", r.signIn)
 
-	g.GET("/test", r.test, NewAuthMiddleware(authService).Authorize)
+	g.GET("/test", r.test, NewAuthMiddleware(authUseCase).Authorize)
 }
 
 type signUpInput struct {
@@ -38,13 +38,13 @@ func (r *authRoutes) signUp(c echo.Context) error {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 
-	id, err := r.authService.CreateUser(c.Request().Context(), service.AuthCreateUserInput{
+	id, err := r.authUseCase.CreateUser(c.Request().Context(), usecase.AuthCreateUserInput{
 		Name:     input.Name,
 		Username: input.Username,
 		Password: input.Password,
 		Email:    input.Email,
 	})
-	if err == service.ErrUserAlreadyExists {
+	if err == usecase.ErrUserAlreadyExists {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return err
 	}
@@ -67,11 +67,11 @@ type signInInput struct {
 func (r *authRoutes) signIn(c echo.Context) error {
 	var input signInInput
 
-	token, err := r.authService.GenerateToken(c.Request().Context(), service.AuthGenerateTokenInput{
+	token, err := r.authUseCase.GenerateToken(c.Request().Context(), usecase.AuthGenerateTokenInput{
 		Username: input.Username,
 		Password: input.Password,
 	})
-	if err == service.ErrUserNotFound {
+	if err == usecase.ErrUserNotFound {
 		newErrorResponse(c, http.StatusBadRequest, "invalid username or password")
 		return err
 	}

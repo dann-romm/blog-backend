@@ -20,6 +20,12 @@ type User interface {
 	GetUserFollowings(ctx context.Context, userID uuid.UUID) ([]entity.User, error)
 }
 
+// type Article interface {
+// 	CreateArticle(ctx context.Context, article entity.Article) (uuid.UUID, error)
+// 	GetArticleById(ctx context.Context, id uuid.UUID) (entity.Article, error)
+// 	GetArticleByAuthor(ctx context.Context, author uuid.UUID) (entity.Article, error)
+// }
+
 type Repositories struct {
 	User
 }

@@ -1,14 +1,14 @@
 package v1
 
 import (
-	"blog-backend/internal/service"
+	"blog-backend/internal/usecase"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	log "github.com/sirupsen/logrus"
 	"os"
 )
 
-func NewRouter(handler *echo.Echo, services *service.Services) {
+func NewRouter(handler *echo.Echo, useCases *usecase.UseCases) {
 	handler.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Format: `{"time":"${time_rfc3339_nano}", "method":"${method}","uri":"${uri}", "status":${status},"error":"${error}"}` + "\n",
 		Output: setLogsFile(),
@@ -19,10 +19,10 @@ func NewRouter(handler *echo.Echo, services *service.Services) {
 
 	auth := handler.Group("/auth")
 	{
-		newAuthRoutes(auth, services.Auth)
+		newAuthRoutes(auth, useCases.Auth)
 	}
 
-	authMiddleware := NewAuthMiddleware(services.Auth)
+	authMiddleware := NewAuthMiddleware(useCases.Auth)
 	v1 := handler.Group("/api/v1", authMiddleware.Authorize)
 	{
 		_ = v1
