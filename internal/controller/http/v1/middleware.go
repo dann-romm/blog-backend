@@ -23,19 +23,16 @@ func NewAuthMiddleware(authUseCase usecase.Auth) *AuthMiddleware {
 
 // Authorize - проверка авторизации пользователя
 // если пользователь авторизован, то в контекст запроса добавляется его id и роль (user, moderator, admin)
-// если пользователь не авторизован, то в контекст запроса добавляется роль guest
 func (h *AuthMiddleware) Authorize(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		token, ok := bearerToken(c.Request())
 		if !ok {
-			c.Set(userRoleCtx, entity.RoleGuest)
-			return next(c)
+			return echo.NewHTTPError(http.StatusForbidden, "not authorized")
 		}
 
 		userID, role, err := h.authUseCase.ParseToken(token)
 		if err != nil {
-			c.Set(userRoleCtx, entity.RoleGuest)
-			return next(c)
+			return echo.NewHTTPError(http.StatusForbidden, "not authorized")
 		}
 
 		c.Set(userIDCtx, userID)
