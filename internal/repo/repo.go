@@ -11,8 +11,11 @@ import (
 type User interface {
 	CreateUser(ctx context.Context, user entity.User) (uuid.UUID, error)
 	GetUserByUsernameAndPassword(ctx context.Context, username, password string) (entity.User, error)
-	GetUserById(ctx context.Context, id uuid.UUID) (entity.User, error)
+	GetUserByID(ctx context.Context, userID uuid.UUID) (entity.User, error)
 	GetUserByUsername(ctx context.Context, username string) (entity.User, error)
+	SetUserFollower(ctx context.Context, followerID uuid.UUID, followingID uuid.UUID) error
+	GetUserFollowers(ctx context.Context, userID uuid.UUID) ([]entity.User, error)
+	GetUserFollowings(ctx context.Context, userID uuid.UUID) ([]entity.User, error)
 }
 
 type Repositories struct {

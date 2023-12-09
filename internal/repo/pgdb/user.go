@@ -80,11 +80,11 @@ func (r *UserRepo) GetUserByUsernameAndPassword(ctx context.Context, username, p
 	return user, nil
 }
 
-func (r *UserRepo) GetUserById(ctx context.Context, id uuid.UUID) (entity.User, error) {
+func (r *UserRepo) GetUserByID(ctx context.Context, userID uuid.UUID) (entity.User, error) {
 	sql, args, _ := r.Builder.
 		Select("*").
 		From("users").
-		Where("id = ?", id).
+		Where("userID = ?", userID).
 		ToSql()
 
 	var user entity.User
@@ -106,11 +106,11 @@ func (r *UserRepo) GetUserById(ctx context.Context, id uuid.UUID) (entity.User, 
 		&user.FollowingCount,
 	)
 	if err != nil {
-		log.Errorf("UserRepo.GetUserById - r.Pool.QueryRow: %v", err)
+		log.Errorf("UserRepo.GetUserByID - r.Pool.QueryRow: %v", err)
 		if err == pgx.ErrNoRows {
 			return entity.User{}, repoerrs.ErrUserNotFound
 		}
-		return entity.User{}, fmt.Errorf("UserRepo.GetUserById - r.Pool.QueryRow: %v", err)
+		return entity.User{}, fmt.Errorf("UserRepo.GetUserByID - r.Pool.QueryRow: %v", err)
 	}
 
 	return user, nil
@@ -150,4 +150,146 @@ func (r *UserRepo) GetUserByUsername(ctx context.Context, username string) (enti
 	}
 
 	return user, nil
+}
+
+func (r *UserRepo) SetUserFollower(ctx context.Context, followerID uuid.UUID, followingID uuid.UUID) error {
+	tx, err := r.Pool.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+		log.Errorf("UserRepo.SetUserFollower - r.Pool.BeginTx: %v", err)
+		return fmt.Errorf("UserRepo.SetUserFollower - r.Pool.BeginTx: %v", err)
+	}
+
+	sql, args, _ := r.Builder.
+		Insert("users_followers").
+		Columns("follower_id", "following_id").
+		Values(followerID, followingID).
+		ToSql()
+
+	_, err = tx.Exec(ctx, sql, args...)
+	if err != nil {
+		log.Errorf("UserRepo.SetUserFollower - tx.Exec: %v", err)
+		return fmt.Errorf("UserRepo.SetUserFollower - tx.Exec: %v", err)
+	}
+
+	sql, args, _ = r.Builder.
+		Update("users").
+		Set("followers_count", "followers_count + 1").
+		Where("id = ?", followingID).
+		ToSql()
+
+	_, err = tx.Exec(ctx, sql, args...)
+	if err != nil {
+		log.Errorf("UserRepo.SetUserFollower - tx.Exec: %v", err)
+		return fmt.Errorf("UserRepo.SetUserFollower - tx.Exec: %v", err)
+	}
+
+	sql, args, _ = r.Builder.
+		Update("users").
+		Set("following_count", "following_count + 1").
+		Where("id = ?", followerID).
+		ToSql()
+
+	_, err = tx.Exec(ctx, sql, args...)
+	if err != nil {
+		log.Errorf("UserRepo.SetUserFollower - tx.Exec: %v", err)
+		return fmt.Errorf("UserRepo.SetUserFollower - tx.Exec: %v", err)
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		log.Errorf("UserRepo.SetUserFollower - tx.Commit: %v", err)
+		return fmt.Errorf("UserRepo.SetUserFollower - tx.Commit: %v", err)
+	}
+
+	return nil
+}
+
+func (r *UserRepo) GetUserFollowers(ctx context.Context, userID uuid.UUID) ([]entity.User, error) {
+	sql, args, _ := r.Builder.
+		Select("u.*").
+		From("users_followers uf").
+		Join("users u ON u.id = uf.follower_id").
+		Where("uf.following_id = ?", userID).
+		ToSql()
+
+	rows, err := r.Pool.Query(ctx, sql, args...)
+	if err != nil {
+		log.Errorf("UserRepo.GetUserFollowers - r.Pool.Query: %v", err)
+		return nil, fmt.Errorf("UserRepo.GetUserFollowers - r.Pool.Query: %v", err)
+	}
+
+	var users []entity.User
+	for rows.Next() {
+		var user entity.User
+		err := rows.Scan(
+			&user.ID,
+			&user.Name,
+			&user.Username,
+			&user.Password,
+			&user.Email,
+			&user.CreatedAt,
+			&user.UpdatedAt,
+			&user.Role,
+			&user.Description,
+			&user.ArticlesCount,
+			&user.CommentsCount,
+			&user.FavoritesArticlesCount,
+			&user.FavoritesCommentsCount,
+			&user.FollowersCount,
+			&user.FollowingCount,
+		)
+		if err != nil {
+			log.Errorf("UserRepo.GetUserFollowers - rows.Scan: %v", err)
+			return nil, fmt.Errorf("UserRepo.GetUserFollowers - rows.Scan: %v", err)
+		}
+
+		users = append(users, user)
+	}
+
+	return users, nil
+}
+
+func (r *UserRepo) GetUserFollowings(ctx context.Context, userID uuid.UUID) ([]entity.User, error) {
+	sql, args, _ := r.Builder.
+		Select("u.*").
+		From("users_followers uf").
+		Join("users u ON u.id = uf.following_id").
+		Where("uf.follower_id = ?", userID).
+		ToSql()
+
+	rows, err := r.Pool.Query(ctx, sql, args...)
+	if err != nil {
+		log.Errorf("UserRepo.GetUserFollowings - r.Pool.Query: %v", err)
+		return nil, fmt.Errorf("UserRepo.GetUserFollowings - r.Pool.Query: %v", err)
+	}
+
+	var users []entity.User
+	for rows.Next() {
+		var user entity.User
+		err := rows.Scan(
+			&user.ID,
+			&user.Name,
+			&user.Username,
+			&user.Password,
+			&user.Email,
+			&user.CreatedAt,
+			&user.UpdatedAt,
+			&user.Role,
+			&user.Description,
+			&user.ArticlesCount,
+			&user.CommentsCount,
+			&user.FavoritesArticlesCount,
+			&user.FavoritesCommentsCount,
+			&user.FollowersCount,
+			&user.FollowingCount,
+		)
+		if err != nil {
+			log.Errorf("UserRepo.GetUserFollowings - rows.Scan: %v", err)
+			return nil, fmt.Errorf("UserRepo.GetUserFollowings - rows.Scan: %v", err)
+		}
+
+		users = append(users, user)
+	}
+
+	return users, nil
 }
