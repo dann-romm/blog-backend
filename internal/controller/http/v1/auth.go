@@ -9,11 +9,13 @@ import (
 
 type authRoutes struct {
 	authUseCase usecase.Auth
+	userUseCase usecase.User
 }
 
-func newAuthRoutes(g *echo.Group, authUseCase usecase.Auth) {
+func newAuthRoutes(g *echo.Group, authUseCase usecase.Auth, userUseCase usecase.User) {
 	r := &authRoutes{
 		authUseCase: authUseCase,
+		userUseCase: userUseCase,
 	}
 
 	g.POST("/sign-up", r.signUp)
@@ -38,7 +40,7 @@ func (r *authRoutes) signUp(c echo.Context) error {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 
-	id, err := r.authUseCase.CreateUser(c.Request().Context(), usecase.AuthCreateUserInput{
+	id, err := r.userUseCase.CreateUser(c.Request().Context(), usecase.AuthCreateUserInput{
 		Name:     input.Name,
 		Username: input.Username,
 		Password: input.Password,

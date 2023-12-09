@@ -24,13 +24,19 @@ type AuthGenerateTokenInput struct {
 }
 
 type Auth interface {
-	CreateUser(ctx context.Context, input AuthCreateUserInput) (uuid.UUID, error)
 	GenerateToken(ctx context.Context, input AuthGenerateTokenInput) (string, error)
 	ParseToken(token string) (uuid.UUID, entity.RoleType, error)
 }
 
+type User interface {
+	CreateUser(ctx context.Context, input AuthCreateUserInput) (uuid.UUID, error)
+	UpdateUserPassword(ctx context.Context, userID uuid.UUID, password string) error
+	UpdateUserEmail(ctx context.Context, userID uuid.UUID, email string) error
+}
+
 type UseCases struct {
 	Auth Auth
+	User User
 }
 
 type UseCasesDependencies struct {
@@ -44,5 +50,6 @@ type UseCasesDependencies struct {
 func NewUseCases(deps UseCasesDependencies) *UseCases {
 	return &UseCases{
 		Auth: NewAuthUseCase(deps.Repos, deps.Hasher, deps.SignKey, deps.TokenTTL),
+		User: NewUserUseCase(deps.Repos, deps.Hasher),
 	}
 }

@@ -27,13 +27,11 @@ type AuthUseCase struct {
 }
 
 var (
-	ErrUserAlreadyExists = fmt.Errorf("user already exists")
-	ErrCannotCreateUser  = fmt.Errorf("cannot create user")
-	ErrCannotGetUser     = fmt.Errorf("cannot get user")
-	ErrCannotSignToken   = fmt.Errorf("cannot sign token")
-	ErrCannotParseToken  = fmt.Errorf("cannot parse token")
-	ErrTokenClaimsType   = fmt.Errorf("token claims are not of type TokenClaims")
-	ErrUserNotFound      = fmt.Errorf("user not found")
+	ErrCannotGetUser    = fmt.Errorf("cannot get user")
+	ErrCannotSignToken  = fmt.Errorf("cannot sign token")
+	ErrCannotParseToken = fmt.Errorf("cannot parse token")
+	ErrTokenClaimsType  = fmt.Errorf("token claims are not of type TokenClaims")
+	ErrUserNotFound     = fmt.Errorf("user not found")
 )
 
 func NewAuthUseCase(userRepo repo.User, passwordHasher hasher.PasswordHasher, signKey string, tokenTTL time.Duration) *AuthUseCase {
@@ -45,28 +43,9 @@ func NewAuthUseCase(userRepo repo.User, passwordHasher hasher.PasswordHasher, si
 	}
 }
 
-func (s *AuthUseCase) CreateUser(ctx context.Context, input AuthCreateUserInput) (uuid.UUID, error) {
-	user := entity.User{
-		Name:     input.Name,
-		Username: input.Username,
-		Password: s.passwordHasher.Hash(input.Password),
-		Email:    input.Email,
-		Role:     entity.RoleUser,
-	}
-
-	userID, err := s.userRepo.CreateUser(ctx, user)
-	if err == repoerrs.ErrUserAlreadyExists {
-		return uuid.UUID{}, ErrUserAlreadyExists
-	}
-	if err != nil {
-		return uuid.UUID{}, ErrCannotCreateUser
-	}
-	return userID, nil
-}
-
-func (s *AuthUseCase) GenerateToken(ctx context.Context, input AuthGenerateTokenInput) (string, error) {
+func (u *AuthUseCase) GenerateToken(ctx context.Context, input AuthGenerateTokenInput) (string, error) {
 	// get user from DB
-	user, err := s.userRepo.GetUserByUsernameAndPassword(ctx, input.Username, s.passwordHasher.Hash(input.Password))
+	user, err := u.userRepo.GetUserByUsernameAndPassword(ctx, input.Username, u.passwordHasher.Hash(input.Password))
 	if err == repoerrs.ErrUserNotFound {
 		return "", ErrUserNotFound
 	}
@@ -77,7 +56,7 @@ func (s *AuthUseCase) GenerateToken(ctx context.Context, input AuthGenerateToken
 	// generate token
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &TokenClaims{
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(s.tokenTTL).Unix(),
+			ExpiresAt: time.Now().Add(u.tokenTTL).Unix(),
 			IssuedAt:  time.Now().Unix(),
 		},
 		UserID: user.ID,
@@ -85,7 +64,7 @@ func (s *AuthUseCase) GenerateToken(ctx context.Context, input AuthGenerateToken
 	})
 
 	// sign token
-	tokenString, err := token.SignedString([]byte(s.signKey))
+	tokenString, err := token.SignedString([]byte(u.signKey))
 	if err != nil {
 		log.Errorf("AuthUseCase.GenerateToken: cannot sign token: %v", err)
 		return "", ErrCannotSignToken
@@ -94,8 +73,8 @@ func (s *AuthUseCase) GenerateToken(ctx context.Context, input AuthGenerateToken
 	return tokenString, nil
 }
 
-func (s *AuthUseCase) ParseToken(accessToken string) (uuid.UUID, entity.RoleType, error) {
-	claims, err := s.parseToken(accessToken)
+func (u *AuthUseCase) ParseToken(accessToken string) (uuid.UUID, entity.RoleType, error) {
+	claims, err := u.parseToken(accessToken)
 	if err != nil {
 		return uuid.UUID{}, "", err
 	}
@@ -103,13 +82,13 @@ func (s *AuthUseCase) ParseToken(accessToken string) (uuid.UUID, entity.RoleType
 	return claims.UserID, claims.Role, nil
 }
 
-func (s *AuthUseCase) parseToken(accessToken string) (*TokenClaims, error) {
+func (u *AuthUseCase) parseToken(accessToken string) (*TokenClaims, error) {
 	token, err := jwt.ParseWithClaims(accessToken, &TokenClaims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 
-		return []byte(s.signKey), nil
+		return []byte(u.signKey), nil
 	})
 
 	if err != nil {
