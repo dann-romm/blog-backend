@@ -33,8 +33,9 @@ type signUpInput struct {
 func (r *authRoutes) signUp(c echo.Context) error {
 	var input signUpInput
 
-	if err := BindAndValidate(c, &input); err != nil {
-		return err
+	err := BindAndValidate(c, &input)
+	if err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
 	}
 
 	id, err := r.authService.CreateUser(c.Request().Context(), service.AuthCreateUserInput{
@@ -48,7 +49,7 @@ func (r *authRoutes) signUp(c echo.Context) error {
 		return err
 	}
 	if err != nil {
-		newErrorResponse(c, http.StatusInternalServerError, "internal server error")
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return err
 	}
 
@@ -66,16 +67,6 @@ type signInInput struct {
 func (r *authRoutes) signIn(c echo.Context) error {
 	var input signInInput
 
-	if err := c.Bind(&input); err != nil {
-		newErrorResponse(c, http.StatusBadRequest, ErrInvalidRequestBody.Error())
-		return err
-	}
-
-	if err := c.Validate(input); err != nil {
-		newErrorResponse(c, http.StatusBadRequest, err.Error())
-		return err
-	}
-
 	token, err := r.authService.GenerateToken(c.Request().Context(), service.AuthGenerateTokenInput{
 		Username: input.Username,
 		Password: input.Password,
@@ -85,17 +76,17 @@ func (r *authRoutes) signIn(c echo.Context) error {
 		return err
 	}
 	if err != nil {
-		newErrorResponse(c, http.StatusInternalServerError, "internal server error")
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return err
 	}
 
-	return c.JSON(http.StatusOK, map[string]interface{}{
+	return c.JSON(http.StatusOK, map[string]any{
 		"token": token,
 	})
 }
 
 func (r *authRoutes) test(c echo.Context) error {
-	return c.JSON(http.StatusOK, map[string]interface{}{
+	return c.JSON(http.StatusOK, map[string]any{
 		"role": c.Get(userRoleCtx).(entity.RoleType),
 	})
 }

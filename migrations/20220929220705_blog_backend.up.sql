@@ -7,7 +7,7 @@ CREATE TYPE role_type AS ENUM (
     'user',
     'moderator',
     'admin'
-    );
+);
 
 -- create users table
 create table users

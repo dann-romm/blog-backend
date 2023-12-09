@@ -26,7 +26,6 @@ type User struct {
 type RoleType string
 
 const (
-	RoleGuest     RoleType = "guest"     // read only
 	RoleUser      RoleType = "user"      // can create,  articles and comments, can vote
 	RoleModerator RoleType = "moderator" // can delete articles and comments
 	RoleAdmin     RoleType = "admin"     // can edit and delete users, articles and comments
