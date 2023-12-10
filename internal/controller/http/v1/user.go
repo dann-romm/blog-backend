@@ -35,7 +35,7 @@ func (r *userRoutes) changePassword(c echo.Context) error {
 	}
 
 	err = r.userUseCase.UpdateUserPassword(c.Request().Context(), usecase.UserUpdateUserPasswordInput{
-		UserID:      uuid.MustParse(c.Get("userID").(string)),
+		UserID:      c.Get(userIDCtx).(uuid.UUID),
 		OldPassword: input.OldPassword,
 		NewPassword: input.NewPassword,
 	})
@@ -68,7 +68,7 @@ func (r *userRoutes) changeEmail(c echo.Context) error {
 	}
 
 	err = r.userUseCase.UpdateUserEmail(c.Request().Context(), usecase.UserUpdateUserEmailInput{
-		UserID: uuid.MustParse(c.Get("userID").(string)),
+		UserID: c.Get(userIDCtx).(uuid.UUID),
 		Email:  input.Email,
 	})
 
