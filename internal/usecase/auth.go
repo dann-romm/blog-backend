@@ -73,13 +73,17 @@ func (u *AuthUseCase) GenerateToken(ctx context.Context, input AuthGenerateToken
 	return tokenString, nil
 }
 
-func (u *AuthUseCase) ParseToken(accessToken string) (uuid.UUID, entity.RoleType, error) {
-	claims, err := u.parseToken(accessToken)
+func (u *AuthUseCase) ParseToken(ctx context.Context, input AuthParseTokenInput) (uuid.UUID, entity.RoleType, error) {
+	claims, err := u.parseToken(input.Token)
 	if err != nil {
 		return uuid.UUID{}, "", err
 	}
 
 	return claims.UserID, claims.Role, nil
+}
+
+func (u *AuthUseCase) GetTokenTTL() (time.Duration, error) {
+	return u.tokenTTL, nil
 }
 
 func (u *AuthUseCase) parseToken(accessToken string) (*TokenClaims, error) {

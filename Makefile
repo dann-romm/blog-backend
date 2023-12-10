@@ -33,11 +33,11 @@ migrate-create:  ### create new migration
 .PHONY: migrate-create
 
 migrate-up: ### migration up
-	migrate -path migrations -database '$(PG_URL_LOCALHOST)?sslmode=disable' up
+	migrate -path migrations -database '$(PG_URL)?sslmode=disable' up
 .PHONY: migrate-up
 
 migrate-down: ### migration down
-	echo "y" | migrate -path migrations -database '$(PG_URL_LOCALHOST)?sslmode=disable' down
+	echo "y" | migrate -path migrations -database '$(PG_URL)?sslmode=disable' down
 .PHONY: migrate-down
 
 test: ### run test

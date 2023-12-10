@@ -22,7 +22,7 @@ var (
 	lowerCaseRegexp = regexp.MustCompile(fmt.Sprintf(`[a-z]{%d,}`, passwordMinLower))
 	upperCaseRegexp = regexp.MustCompile(fmt.Sprintf(`[A-Z]{%d,}`, passwordMinUpper))
 	digitRegexp     = regexp.MustCompile(fmt.Sprintf(`[0-9]{%d,}`, passwordMinDigit))
-	symbolRegexp    = regexp.MustCompile(fmt.Sprintf(`[!@#$%%^&*]{%d,}`, passwordMinSymbol))
+	symbolRegexp    = regexp.MustCompile(fmt.Sprintf(`[!@_#$%%^&*]{%d,}`, passwordMinSymbol))
 )
 
 type CustomValidator struct {

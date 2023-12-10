@@ -4,14 +4,11 @@ import (
 	"blog-backend/internal/usecase"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	log "github.com/sirupsen/logrus"
-	"os"
 )
 
 func NewRouter(handler *echo.Echo, useCases *usecase.UseCases) {
 	handler.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Format: `{"time":"${time_rfc3339_nano}", "method":"${method}","uri":"${uri}", "status":${status},"error":"${error}"}` + "\n",
-		Output: setLogsFile(),
 	}))
 	handler.Use(middleware.Recover())
 
@@ -19,7 +16,7 @@ func NewRouter(handler *echo.Echo, useCases *usecase.UseCases) {
 
 	auth := handler.Group("/auth")
 	{
-		newAuthRoutes(auth, useCases.Auth)
+		newAuthRoutes(auth, useCases.Auth, useCases.User)
 	}
 
 	authMiddleware := NewAuthMiddleware(useCases.Auth)
@@ -27,12 +24,4 @@ func NewRouter(handler *echo.Echo, useCases *usecase.UseCases) {
 	{
 		_ = v1
 	}
-}
-
-func setLogsFile() *os.File {
-	file, err := os.OpenFile("/logs/requests.log", os.O_APPEND|os.O_CREATE|os.O_RDWR, 0666)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return file
 }

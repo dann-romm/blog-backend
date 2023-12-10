@@ -22,14 +22,14 @@ var (
 	ErrCannotChangeEmail    = fmt.Errorf("cannot change email")
 )
 
-func NewUserUseCase(userRepo repo.User, passwordHasher hasher.PasswordHasher) User {
+func NewUserUseCase(userRepo repo.User, passwordHasher hasher.PasswordHasher) *UserUseCase {
 	return &UserUseCase{
 		userRepo:       userRepo,
 		passwordHasher: passwordHasher,
 	}
 }
 
-func (u *UserUseCase) CreateUser(ctx context.Context, input AuthCreateUserInput) (uuid.UUID, error) {
+func (u *UserUseCase) CreateUser(ctx context.Context, input UserCreateUserInput) (uuid.UUID, error) {
 	user := entity.User{
 		Name:     input.Name,
 		Username: input.Username,
@@ -48,16 +48,16 @@ func (u *UserUseCase) CreateUser(ctx context.Context, input AuthCreateUserInput)
 	return userID, nil
 }
 
-func (u *UserUseCase) UpdateUserPassword(ctx context.Context, userID uuid.UUID, password string) error {
-	err := u.userRepo.UpdateUserPassword(ctx, userID, u.passwordHasher.Hash(password))
+func (u *UserUseCase) UpdateUserPassword(ctx context.Context, input UserUpdateUserPasswordInput) error {
+	err := u.userRepo.UpdateUserPassword(ctx, input.UserID, u.passwordHasher.Hash(input.Password))
 	if err != nil {
 		return ErrCannotChangePassword
 	}
 	return nil
 }
 
-func (u *UserUseCase) UpdateUserEmail(ctx context.Context, userID uuid.UUID, email string) error {
-	err := u.userRepo.UpdateUserEmail(ctx, userID, email)
+func (u *UserUseCase) UpdateUserEmail(ctx context.Context, input UserUpdateUserEmailInput) error {
+	err := u.userRepo.UpdateUserEmail(ctx, input.UserID, input.Email)
 	if err != nil {
 		return ErrCannotChangeEmail
 	}

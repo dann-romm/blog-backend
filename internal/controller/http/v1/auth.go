@@ -38,9 +38,10 @@ func (r *authRoutes) signUp(c echo.Context) error {
 	err := BindAndValidate(c, &input)
 	if err != nil {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return err
 	}
 
-	id, err := r.userUseCase.CreateUser(c.Request().Context(), usecase.AuthCreateUserInput{
+	id, err := r.userUseCase.CreateUser(c.Request().Context(), usecase.UserCreateUserInput{
 		Name:     input.Name,
 		Username: input.Username,
 		Password: input.Password,
@@ -69,6 +70,12 @@ type signInInput struct {
 func (r *authRoutes) signIn(c echo.Context) error {
 	var input signInInput
 
+	err := BindAndValidate(c, &input)
+	if err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return err
+	}
+
 	token, err := r.authUseCase.GenerateToken(c.Request().Context(), usecase.AuthGenerateTokenInput{
 		Username: input.Username,
 		Password: input.Password,
@@ -82,8 +89,16 @@ func (r *authRoutes) signIn(c echo.Context) error {
 		return err
 	}
 
-	return c.JSON(http.StatusOK, map[string]any{
-		"token": token,
+	ttl, _ := r.authUseCase.GetTokenTTL()
+	c.SetCookie(&http.Cookie{
+		Name:   "access-token",
+		Value:  token,
+		Path:   "/",
+		MaxAge: int(ttl.Seconds()),
+	})
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"access_token": token,
 	})
 }
 
