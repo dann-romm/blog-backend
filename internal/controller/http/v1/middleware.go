@@ -3,7 +3,6 @@ package v1
 import (
 	"blog-backend/internal/entity"
 	"blog-backend/internal/usecase"
-	"context"
 	"github.com/labstack/echo/v4"
 )
 
@@ -31,7 +30,7 @@ func (h *AuthMiddleware) Authorize(next echo.HandlerFunc) echo.HandlerFunc {
 
 		token := cookie.Value
 
-		userID, role, err := h.authUseCase.ParseToken(context.Background(), usecase.AuthParseTokenInput{
+		userID, role, err := h.authUseCase.ParseToken(c.Request().Context(), usecase.AuthParseTokenInput{
 			Token: token,
 		})
 		if err != nil {
