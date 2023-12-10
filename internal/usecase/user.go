@@ -49,7 +49,12 @@ func (u *UserUseCase) CreateUser(ctx context.Context, input UserCreateUserInput)
 }
 
 func (u *UserUseCase) UpdateUserPassword(ctx context.Context, input UserUpdateUserPasswordInput) error {
-	err := u.userRepo.UpdateUserPassword(ctx, input.UserID, u.passwordHasher.Hash(input.Password))
+	err := u.userRepo.UpdateUserPassword(
+		ctx,
+		input.UserID,
+		u.passwordHasher.Hash(input.OldPassword),
+		u.passwordHasher.Hash(input.NewPassword),
+	)
 	if err != nil {
 		return ErrCannotChangePassword
 	}

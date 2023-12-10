@@ -44,18 +44,22 @@ func (r *UserRepo) CreateUser(ctx context.Context, user entity.User) (uuid.UUID,
 	return id, nil
 }
 
-func (r *UserRepo) UpdateUserPassword(ctx context.Context, userID uuid.UUID, password string) error {
+func (r *UserRepo) UpdateUserPassword(ctx context.Context, userID uuid.UUID, oldPassword, newPassword string) error {
 	sql, args, _ := r.Builder.
 		Update("users").
-		Set("password", password).
+		Set("password", newPassword).
 		Set("updated_at", "NOW()").
-		Where("id = ?", userID).
+		Where("id = ? AND password = ?", userID, oldPassword).
 		ToSql()
 
-	_, err := r.Pool.Exec(ctx, sql, args...)
+	res, err := r.Pool.Exec(ctx, sql, args...)
 	if err != nil {
 		log.Errorf("UserRepo.UpdateUserPassword - r.Pool.Exec: %v", err)
 		return fmt.Errorf("UserRepo.UpdateUserPassword - r.Pool.Exec: %v", err)
+	}
+
+	if res.RowsAffected() == 0 {
+		return repoerrs.ErrUserNotFound
 	}
 
 	return nil

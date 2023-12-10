@@ -19,8 +19,9 @@ type UserCreateUserInput struct {
 }
 
 type UserUpdateUserPasswordInput struct {
-	UserID   uuid.UUID
-	Password string
+	UserID      uuid.UUID
+	OldPassword string
+	NewPassword string
 }
 
 type UserUpdateUserEmailInput struct {
