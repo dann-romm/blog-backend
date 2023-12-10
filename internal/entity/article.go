@@ -7,7 +7,7 @@ import (
 
 type Article struct {
 	Id             uuid.UUID `db:"id"`
-	AuthorId       uuid.UUID `db:"author_id"`
+	AuthorID       uuid.UUID `db:"author_id"`
 	Title          string    `db:"title"`
 	Description    string    `db:"description"`
 	Content        string    `db:"content"`

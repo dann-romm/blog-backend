@@ -11,32 +11,6 @@ import (
 
 //go:generate mockgen -source=usecase.go -destination=mocks/usecase.go -package=mocks
 
-type AuthGenerateTokenInput struct {
-	Username string
-	Password string
-}
-
-type AuthParseTokenInput struct {
-	Token string
-}
-
-type UserCreateUserInput struct {
-	Name     string
-	Username string
-	Password string
-	Email    string
-}
-
-type UserUpdateUserPasswordInput struct {
-	UserID   uuid.UUID
-	Password string
-}
-
-type UserUpdateUserEmailInput struct {
-	UserID uuid.UUID
-	Email  string
-}
-
 type Auth interface {
 	GenerateToken(ctx context.Context, input AuthGenerateTokenInput) (string, error)
 	ParseToken(ctx context.Context, input AuthParseTokenInput) (uuid.UUID, entity.RoleType, error)
@@ -49,9 +23,20 @@ type User interface {
 	UpdateUserEmail(ctx context.Context, input UserUpdateUserEmailInput) error
 }
 
+type Article interface {
+	CreateArticle(ctx context.Context, input ArticleCreateArticleInput) (uuid.UUID, error)
+	GetArticleByID(ctx context.Context, input ArticleGetArticleByIDInput) (entity.Article, error)
+	GetArticlesByAuthorID(ctx context.Context, input ArticleGetArticlesByAuthorIDInput) ([]entity.Article, error)
+	GetNewestArticles(ctx context.Context, input ArticleGetNewestArticlesInput) ([]entity.Article, error)
+	SetArticleFavorite(ctx context.Context, input ArticleSetArticleFavoriteInput) error
+	RemoveArticleFavorite(ctx context.Context, input ArticleRemoveArticleFavoriteInput) error
+	GetFavoriteArticles(ctx context.Context, input ArticleGetFavoriteArticlesInput) ([]entity.Article, error)
+}
+
 type UseCases struct {
-	Auth Auth
-	User User
+	Auth    Auth
+	User    User
+	Article Article
 }
 
 type UseCasesDependencies struct {
@@ -64,7 +49,8 @@ type UseCasesDependencies struct {
 
 func NewUseCases(deps UseCasesDependencies) *UseCases {
 	return &UseCases{
-		Auth: NewAuthUseCase(deps.Repos, deps.Hasher, deps.SignKey, deps.TokenTTL),
-		User: NewUserUseCase(deps.Repos, deps.Hasher),
+		Auth:    NewAuthUseCase(deps.Repos, deps.Hasher, deps.SignKey, deps.TokenTTL),
+		User:    NewUserUseCase(deps.Repos, deps.Hasher),
+		Article: NewArticleUseCase(deps.Repos),
 	}
 }

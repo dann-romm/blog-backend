@@ -19,7 +19,7 @@ func (a ArticleRepo) CreateArticle(ctx context.Context, article entity.Article) 
 	sql, args, _ := a.Builder.
 		Insert("articles").
 		Columns("author_id", "title", "description", "content").
-		Values(article.AuthorId, article.Title, article.Description, article.Content).
+		Values(article.AuthorID, article.Title, article.Description, article.Content).
 		Suffix("RETURNING id").
 		ToSql()
 
@@ -42,7 +42,7 @@ func (a ArticleRepo) GetArticleByID(ctx context.Context, id uuid.UUID) (entity.A
 	var article entity.Article
 	err := a.Pool.QueryRow(ctx, sql, args...).Scan(
 		&article.Id,
-		&article.AuthorId,
+		&article.AuthorID,
 		&article.Title,
 		&article.Description,
 		&article.Content,
@@ -79,7 +79,7 @@ func (a ArticleRepo) GetArticlesByAuthorID(ctx context.Context, authorID uuid.UU
 		var article entity.Article
 		err := rows.Scan(
 			&article.Id,
-			&article.AuthorId,
+			&article.AuthorID,
 			&article.Title,
 			&article.Description,
 			&article.Content,
@@ -121,7 +121,7 @@ func (a ArticleRepo) GetNewestArticles(ctx context.Context, limit, offset int) (
 		var article entity.Article
 		err := rows.Scan(
 			&article.Id,
-			&article.AuthorId,
+			&article.AuthorID,
 			&article.Title,
 			&article.Description,
 			&article.Content,
@@ -192,7 +192,7 @@ func (a ArticleRepo) GetFavoriteArticles(ctx context.Context, userID uuid.UUID) 
 		var article entity.Article
 		err := rows.Scan(
 			&article.Id,
-			&article.AuthorId,
+			&article.AuthorID,
 			&article.Title,
 			&article.Description,
 			&article.Content,
