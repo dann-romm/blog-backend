@@ -19,8 +19,8 @@ type Auth interface {
 
 type User interface {
 	CreateUser(ctx context.Context, input UserCreateUserInput) (uuid.UUID, error)
+	UpdateUser(ctx context.Context, input UserUpdateUserInput) error
 	UpdateUserPassword(ctx context.Context, input UserUpdateUserPasswordInput) error
-	UpdateUserEmail(ctx context.Context, input UserUpdateUserEmailInput) error
 }
 
 type Article interface {

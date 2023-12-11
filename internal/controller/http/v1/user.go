@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"blog-backend/internal/entity"
 	"blog-backend/internal/usecase"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -16,17 +17,20 @@ func newUserRoutes(g *echo.Group, userUseCase usecase.User) {
 		userUseCase: userUseCase,
 	}
 
-	g.POST("/user/change-password", r.changePassword)
-	g.POST("/user/change-email", r.changeEmail)
+	g.PUT("/users", r.updateUser)
+	g.PUT("/users/password", r.updateUserPassword)
 }
 
-type changePasswordInput struct {
-	OldPassword string `json:"old_password" validate:"required,password"`
-	NewPassword string `json:"new_password" validate:"required,password"`
+type updateUserInput struct {
+	UserID      uuid.UUID `json:"user_id" validate:"required,uuid4"`
+	Name        *string   `json:"name" validate:"omitempty,min=3,max=256"`
+	Email       *string   `json:"email" validate:"omitempty,email"`
+	Role        *string   `json:"role"`
+	Description *string   `json:"description"`
 }
 
-func (r *userRoutes) changePassword(c echo.Context) error {
-	var input changePasswordInput
+func (r *userRoutes) updateUser(c echo.Context) error {
+	var input updateUserInput
 
 	err := BindAndValidate(c, &input)
 	if err != nil {
@@ -34,16 +38,19 @@ func (r *userRoutes) changePassword(c echo.Context) error {
 		return err
 	}
 
-	err = r.userUseCase.UpdateUserPassword(c.Request().Context(), usecase.UserUpdateUserPasswordInput{
-		UserID:      c.Get(userIDCtx).(uuid.UUID),
-		OldPassword: input.OldPassword,
-		NewPassword: input.NewPassword,
+	requestedUserRole := c.Get(userRoleCtx).(entity.RoleType)
+	requestedUserID := c.Get(userIDCtx).(uuid.UUID)
+
+	err = r.userUseCase.UpdateUser(c.Request().Context(), usecase.UserUpdateUserInput{
+		RequestedUserID:   requestedUserID,
+		RequestedUserRole: requestedUserRole,
+		UserID:            input.UserID,
+		Name:              input.Name,
+		Email:             input.Email,
+		Role:              input.Role,
+		Description:       input.Description,
 	})
 
-	if err == usecase.ErrCannotChangePassword {
-		newErrorResponse(c, http.StatusBadRequest, err.Error())
-		return err
-	}
 	if err != nil {
 		newErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return err
@@ -54,12 +61,13 @@ func (r *userRoutes) changePassword(c echo.Context) error {
 	})
 }
 
-type changeEmailInput struct {
-	Email string `json:"email" validate:"required,email"`
+type updateUserPasswordInput struct {
+	OldPassword string `json:"old_password" validate:"required,password"`
+	NewPassword string `json:"new_password" validate:"required,password"`
 }
 
-func (r *userRoutes) changeEmail(c echo.Context) error {
-	var input changeEmailInput
+func (r *userRoutes) updateUserPassword(c echo.Context) error {
+	var input updateUserPasswordInput
 
 	err := BindAndValidate(c, &input)
 	if err != nil {
@@ -67,12 +75,19 @@ func (r *userRoutes) changeEmail(c echo.Context) error {
 		return err
 	}
 
-	err = r.userUseCase.UpdateUserEmail(c.Request().Context(), usecase.UserUpdateUserEmailInput{
-		UserID: c.Get(userIDCtx).(uuid.UUID),
-		Email:  input.Email,
+	userID := c.Get(userIDCtx).(uuid.UUID)
+
+	err = r.userUseCase.UpdateUserPassword(c.Request().Context(), usecase.UserUpdateUserPasswordInput{
+		UserID:      userID,
+		OldPassword: input.OldPassword,
+		NewPassword: input.NewPassword,
 	})
 
-	if err == usecase.ErrCannotChangeEmail {
+	if err == usecase.ErrUserNotFound {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return err
+	}
+	if err == usecase.ErrCannotUpdatePasswordToIdentical {
 		newErrorResponse(c, http.StatusBadRequest, err.Error())
 		return err
 	}

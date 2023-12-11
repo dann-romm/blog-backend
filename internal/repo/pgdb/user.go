@@ -65,18 +65,39 @@ func (r *UserRepo) UpdateUserPassword(ctx context.Context, userID uuid.UUID, old
 	return nil
 }
 
-func (r *UserRepo) UpdateUserEmail(ctx context.Context, userID uuid.UUID, email string) error {
-	sql, args, _ := r.Builder.
+func (r *UserRepo) UpdateUser(ctx context.Context, userID uuid.UUID, name, email, description, role *string) error {
+	sqlBuilder := r.Builder.
 		Update("users").
-		Set("email", email).
-		Set("updated_at", "NOW()").
+		Set("updated_at", "NOW()")
+
+	if name != nil {
+		sqlBuilder = sqlBuilder.Set("name", *name)
+	}
+
+	if email != nil {
+		sqlBuilder = sqlBuilder.Set("email", *email)
+	}
+
+	if description != nil {
+		sqlBuilder = sqlBuilder.Set("description", *description)
+	}
+
+	if role != nil {
+		sqlBuilder = sqlBuilder.Set("role", *role)
+	}
+
+	sql, args, _ := sqlBuilder.
 		Where("id = ?", userID).
 		ToSql()
 
-	_, err := r.Pool.Exec(ctx, sql, args...)
+	res, err := r.Pool.Exec(ctx, sql, args...)
 	if err != nil {
-		log.Errorf("UserRepo.UpdateUserEmail - r.Pool.Exec: %v", err)
-		return fmt.Errorf("UserRepo.UpdateUserEmail - r.Pool.Exec: %v", err)
+		log.Errorf("UserRepo.UpdateUser - r.Pool.Exec: %v", err)
+		return fmt.Errorf("UserRepo.UpdateUser - r.Pool.Exec: %v", err)
+	}
+
+	if res.RowsAffected() == 0 {
+		return repoerrs.ErrUserNotFound
 	}
 
 	return nil

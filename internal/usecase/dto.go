@@ -1,6 +1,9 @@
 package usecase
 
-import "github.com/google/uuid"
+import (
+	"blog-backend/internal/entity"
+	"github.com/google/uuid"
+)
 
 type AuthGenerateTokenInput struct {
 	Username string
@@ -18,15 +21,20 @@ type UserCreateUserInput struct {
 	Email    string
 }
 
+type UserUpdateUserInput struct {
+	RequestedUserID   uuid.UUID
+	RequestedUserRole entity.RoleType
+	UserID            uuid.UUID
+	Name              *string
+	Email             *string
+	Role              *string
+	Description       *string
+}
+
 type UserUpdateUserPasswordInput struct {
 	UserID      uuid.UUID
 	OldPassword string
 	NewPassword string
-}
-
-type UserUpdateUserEmailInput struct {
-	UserID uuid.UUID
-	Email  string
 }
 
 type ArticleCreateArticleInput struct {
