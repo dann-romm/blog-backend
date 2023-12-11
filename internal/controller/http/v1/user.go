@@ -17,9 +17,9 @@ func newUserRoutes(g *echo.Group, userUseCase usecase.User) {
 		userUseCase: userUseCase,
 	}
 
+	g.GET("/users/:username", r.getUser)
 	g.PUT("/users/:username", r.updateUser)
 	g.PUT("/users/password", r.updateUserPassword)
-	g.GET("/users/:username", r.getUser)
 }
 
 type updateUserInput struct {

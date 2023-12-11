@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"blog-backend/internal/entity"
 	"blog-backend/internal/usecase"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -20,8 +19,6 @@ func newAuthRoutes(g *echo.Group, authUseCase usecase.Auth, userUseCase usecase.
 
 	g.POST("/sign-up", r.signUp)
 	g.POST("/sign-in", r.signIn)
-
-	g.GET("/test", r.test, NewAuthMiddleware(authUseCase).Authorize)
 }
 
 type signUpInput struct {
@@ -99,11 +96,5 @@ func (r *authRoutes) signIn(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		"access_token": token,
-	})
-}
-
-func (r *authRoutes) test(c echo.Context) error {
-	return c.JSON(http.StatusOK, map[string]any{
-		"role": c.Get(userRoleCtx).(entity.RoleType),
 	})
 }
