@@ -23,5 +23,6 @@ func NewRouter(handler *echo.Echo, useCases *usecase.UseCases) {
 	v1 := handler.Group("/api/v1", authMiddleware.Authorize)
 	{
 		newUserRoutes(v1, useCases.User)
+		newArticleRoutes(v1, useCases.Article)
 	}
 }
