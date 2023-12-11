@@ -3,6 +3,8 @@ package validator
 import (
 	"fmt"
 	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
+	log "github.com/sirupsen/logrus"
 	"reflect"
 	"regexp"
 	"strings"
@@ -10,7 +12,7 @@ import (
 
 const (
 	passwordMinLength = 8
-	passwordMaxLength = 32
+	passwordMaxLength = 64
 	passwordMinLower  = 1
 	passwordMinUpper  = 1
 	passwordMinDigit  = 1
@@ -47,35 +49,39 @@ func NewCustomValidator() *CustomValidator {
 		panic(err)
 	}
 
+	v.RegisterCustomTypeFunc(validateUUID, uuid.UUID{})
+
 	return cv
 }
 
 func (cv *CustomValidator) Validate(i interface{}) error {
 	err := cv.v.Struct(i)
 	if err != nil {
-		fieldErr := err.(validator.ValidationErrors)[0]
+		// fieldErr := err.(validator.ValidationErrors)[0]
+		log.Debugf("err: %+v", err)
 
-		return cv.newValidationError(fieldErr.Field(), fieldErr.Value(), fieldErr.Tag(), fieldErr.Param())
+		// return cv.newValidationError(fieldErr.Field(), fieldErr.Value(), fieldErr.Tag(), fieldErr.Param())
+		return err
 	}
 	return nil
 }
 
-func (cv *CustomValidator) newValidationError(field string, value interface{}, tag string, param string) error {
-	switch tag {
-	case "required":
-		return fmt.Errorf("field %s is required", field)
-	case "email":
-		return fmt.Errorf("field %s must be a valid email address", field)
-	case "password":
-		return cv.passwdErr
-	case "min":
-		return fmt.Errorf("field %s must be at least %s characters", field, param)
-	case "max":
-		return fmt.Errorf("field %s must be at most %s characters", field, param)
-	default:
-		return fmt.Errorf("field %s is invalid", field)
-	}
-}
+// func (cv *CustomValidator) newValidationError(field string, value interface{}, tag string, param string) error {
+// 	switch tag {
+// 	case "required":
+// 		return fmt.Errorf("field %s is required", field)
+// 	case "email":
+// 		return fmt.Errorf("field %s must be a valid email address", field)
+// 	case "password":
+// 		return cv.passwdErr
+// 	case "min":
+// 		return fmt.Errorf("field %s must be at least %s characters", field, param)
+// 	case "max":
+// 		return fmt.Errorf("field %s must be at most %s characters", field, param)
+// 	default:
+// 		return fmt.Errorf("field %s is invalid", field)
+// 	}
+// }
 
 func (cv *CustomValidator) passwordValidate(fl validator.FieldLevel) bool {
 	// check if the field is a string
@@ -106,4 +112,11 @@ func (cv *CustomValidator) passwordValidate(fl validator.FieldLevel) bool {
 	}
 
 	return true
+}
+
+func validateUUID(field reflect.Value) interface{} {
+	if valuer, ok := field.Interface().(uuid.UUID); ok {
+		return valuer.String()
+	}
+	return nil
 }

@@ -25,8 +25,8 @@ func newAuthRoutes(g *echo.Group, authUseCase usecase.Auth, userUseCase usecase.
 }
 
 type signUpInput struct {
-	Name     string `json:"name" validate:"required,min=4,max=32"`
-	Username string `json:"username" validate:"required,min=4,max=32"`
+	Name     string `json:"name" validate:"required,min=4,max=256"`
+	Username string `json:"username" validate:"required,min=4,max=256"`
 	Password string `json:"password" validate:"required,password"`
 	Email    string `json:"email" validate:"required,email"`
 }
