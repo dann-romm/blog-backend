@@ -20,6 +20,7 @@ var (
 	ErrCannotCreateUser                = fmt.Errorf("cannot create user")
 	ErrHaveNoPermission                = fmt.Errorf("have no permission")
 	ErrCannotUpdatePasswordToIdentical = fmt.Errorf("cannot update password to identical")
+	ErrNothingToUpdate                 = fmt.Errorf("nothing to update")
 )
 
 func NewUserUseCase(userRepo repo.User, passwordHasher hasher.PasswordHasher) *UserUseCase {
@@ -49,6 +50,10 @@ func (u *UserUseCase) CreateUser(ctx context.Context, input UserCreateUserInput)
 }
 
 func (u *UserUseCase) UpdateUser(ctx context.Context, input UserUpdateUserInput) error {
+	if input.Name == nil && input.Email == nil && input.Role == nil && input.Description == nil {
+		return ErrNothingToUpdate
+	}
+
 	err := u.checkPermissions(ctx, input)
 	if err != nil {
 		return err
