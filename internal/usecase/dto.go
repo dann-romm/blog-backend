@@ -21,6 +21,10 @@ type UserCreateUserInput struct {
 	Email    string
 }
 
+type UserGetUserByUsernameInput struct {
+	Username string
+}
+
 type UserUpdateUserInput struct {
 	RequestedUserID   uuid.UUID
 	RequestedUserRole entity.RoleType

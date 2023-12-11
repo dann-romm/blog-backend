@@ -19,6 +19,7 @@ type Auth interface {
 
 type User interface {
 	CreateUser(ctx context.Context, input UserCreateUserInput) (uuid.UUID, error)
+	GetUserByUsername(ctx context.Context, input UserGetUserByUsernameInput) (entity.User, error)
 	UpdateUser(ctx context.Context, input UserUpdateUserInput) error
 	UpdateUserPassword(ctx context.Context, input UserUpdateUserPasswordInput) error
 }

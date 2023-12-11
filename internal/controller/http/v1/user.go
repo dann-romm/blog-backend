@@ -19,6 +19,7 @@ func newUserRoutes(g *echo.Group, userUseCase usecase.User) {
 
 	g.PUT("/users/:username", r.updateUser)
 	g.PUT("/users/password", r.updateUserPassword)
+	g.GET("/users/:username", r.getUser)
 }
 
 type updateUserInput struct {
@@ -98,5 +99,41 @@ func (r *userRoutes) updateUserPassword(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		"ok": true,
+	})
+}
+
+type getUserInput struct {
+	Username string `param:"username" validate:"required,min=3,max=256"`
+}
+
+func (r *userRoutes) getUser(c echo.Context) error {
+	var input getUserInput
+
+	err := BindAndValidate(c, &input)
+	if err != nil {
+		newErrorResponse(c, http.StatusBadRequest, err.Error())
+		return err
+	}
+
+	user, err := r.userUseCase.GetUserByUsername(c.Request().Context(), usecase.UserGetUserByUsernameInput{
+		Username: input.Username,
+	})
+	if err == usecase.ErrUserNotFound {
+		newErrorResponse(c, http.StatusNotFound, err.Error())
+		return err
+	}
+	if err != nil {
+		newErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return err
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"user": map[string]interface{}{
+			"name":        user.Name,
+			"username":    user.Username,
+			"email":       user.Email,
+			"role":        user.Role,
+			"description": user.Description,
+		},
 	})
 }

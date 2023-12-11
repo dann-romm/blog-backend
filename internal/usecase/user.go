@@ -49,6 +49,17 @@ func (u *UserUseCase) CreateUser(ctx context.Context, input UserCreateUserInput)
 	return userID, nil
 }
 
+func (u *UserUseCase) GetUserByUsername(ctx context.Context, input UserGetUserByUsernameInput) (entity.User, error) {
+	user, err := u.userRepo.GetUserByUsername(ctx, input.Username)
+	if err == repoerrs.ErrUserNotFound {
+		return entity.User{}, ErrUserNotFound
+	}
+	if err != nil {
+		return entity.User{}, err
+	}
+	return user, nil
+}
+
 func (u *UserUseCase) UpdateUser(ctx context.Context, input UserUpdateUserInput) error {
 	if input.NewName == nil && input.NewEmail == nil && input.NewRole == nil && input.NewDescription == nil {
 		return ErrNothingToUpdate
