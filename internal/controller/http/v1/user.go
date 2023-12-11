@@ -17,16 +17,16 @@ func newUserRoutes(g *echo.Group, userUseCase usecase.User) {
 		userUseCase: userUseCase,
 	}
 
-	g.PUT("/users", r.updateUser)
+	g.PUT("/users/:username", r.updateUser)
 	g.PUT("/users/password", r.updateUserPassword)
 }
 
 type updateUserInput struct {
-	UserID      uuid.UUID `json:"user_id" validate:"required,uuid4"`
-	Name        *string   `json:"name" validate:"omitempty,min=3,max=256"`
-	Email       *string   `json:"email" validate:"omitempty,email"`
-	Role        *string   `json:"role"`
-	Description *string   `json:"description"`
+	Username    string           `param:"username" validate:"required,min=3,max=256"`
+	Name        *string          `json:"name" validate:"omitempty,min=3,max=256"`
+	Email       *string          `json:"email" validate:"omitempty,email"`
+	Role        *entity.RoleType `json:"role" validate:"omitempty,oneof=user moderator admin"`
+	Description *string          `json:"description" validate:"omitempty"`
 }
 
 func (r *userRoutes) updateUser(c echo.Context) error {
@@ -44,11 +44,11 @@ func (r *userRoutes) updateUser(c echo.Context) error {
 	err = r.userUseCase.UpdateUser(c.Request().Context(), usecase.UserUpdateUserInput{
 		RequestedUserID:   requestedUserID,
 		RequestedUserRole: requestedUserRole,
-		UserID:            input.UserID,
-		Name:              input.Name,
-		Email:             input.Email,
-		Role:              input.Role,
-		Description:       input.Description,
+		Username:          input.Username,
+		NewName:           input.Name,
+		NewEmail:          input.Email,
+		NewRole:           input.Role,
+		NewDescription:    input.Description,
 	})
 
 	if err != nil {

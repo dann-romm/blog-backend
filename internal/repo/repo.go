@@ -11,7 +11,7 @@ import (
 type User interface {
 	CreateUser(ctx context.Context, user entity.User) (uuid.UUID, error)
 	UpdateUserPassword(ctx context.Context, userID uuid.UUID, oldPassword, newPassword string) error
-	UpdateUser(ctx context.Context, userID uuid.UUID, name, email, description, role *string) error
+	UpdateUserByID(ctx context.Context, userID uuid.UUID, name, email, description *string, role *entity.RoleType) error
 	GetUserByUsernameAndPassword(ctx context.Context, username, password string) (entity.User, error)
 	GetUserByID(ctx context.Context, userID uuid.UUID) (entity.User, error)
 	GetUserByUsername(ctx context.Context, username string) (entity.User, error)

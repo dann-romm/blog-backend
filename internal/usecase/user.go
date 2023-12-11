@@ -50,22 +50,35 @@ func (u *UserUseCase) CreateUser(ctx context.Context, input UserCreateUserInput)
 }
 
 func (u *UserUseCase) UpdateUser(ctx context.Context, input UserUpdateUserInput) error {
-	if input.Name == nil && input.Email == nil && input.Role == nil && input.Description == nil {
+	if input.NewName == nil && input.NewEmail == nil && input.NewRole == nil && input.NewDescription == nil {
 		return ErrNothingToUpdate
 	}
 
-	err := u.checkPermissions(ctx, input)
+	user, err := u.userRepo.GetUserByUsername(ctx, input.Username)
 	if err != nil {
 		return err
 	}
 
-	err = u.userRepo.UpdateUser(
+	// check updating the same
+	if (input.NewName == nil || *input.NewName == user.Name) &&
+		(input.NewEmail == nil || *input.NewEmail == user.Email) &&
+		(input.NewRole == nil || *input.NewRole == user.Role) &&
+		(input.NewDescription == nil || *input.NewDescription == user.Description) {
+		return ErrNothingToUpdate
+	}
+
+	err = u.checkPermissions(user, input.RequestedUserID, input.RequestedUserRole, input.NewRole, input.NewEmail)
+	if err != nil {
+		return err
+	}
+
+	err = u.userRepo.UpdateUserByID(
 		ctx,
-		input.UserID,
-		input.Name,
-		input.Email,
-		input.Role,
-		input.Description,
+		user.ID,
+		input.NewName,
+		input.NewEmail,
+		input.NewDescription,
+		input.NewRole,
 	)
 	if err == repoerrs.ErrUserNotFound {
 		return ErrUserNotFound
@@ -98,33 +111,34 @@ func (u *UserUseCase) UpdateUserPassword(ctx context.Context, input UserUpdateUs
 	return nil
 }
 
-func (u *UserUseCase) checkPermissions(ctx context.Context, input UserUpdateUserInput) error {
+func (u *UserUseCase) checkPermissions(
+	user entity.User,
+	requestedUserID uuid.UUID,
+	requestedUserRole entity.RoleType,
+	newRole *entity.RoleType,
+	newEmail *string,
+) error {
 	// anyone can update himself except role
-	if input.UserID == input.RequestedUserID {
-		if input.Role != nil {
+	if user.ID == requestedUserID {
+		if newRole != nil {
 			return ErrHaveNoPermission
 		}
 		return nil
 	}
 
 	// user can't update other users
-	if input.RequestedUserRole == entity.RoleUser {
+	if requestedUserRole == entity.RoleUser {
 		return ErrHaveNoPermission
 	}
 
 	// moderator can't update other emails
-	if input.RequestedUserRole == entity.RoleModerator && input.Email != nil {
+	if requestedUserRole == entity.RoleModerator && newEmail != nil {
 		return ErrHaveNoPermission
 	}
 
-	user, err := u.userRepo.GetUserByID(ctx, input.UserID)
-	if err != nil {
-		return err
-	}
-
-	if input.RequestedUserRole == entity.RoleModerator {
+	if requestedUserRole == entity.RoleModerator {
 		// moderator can't update any roles
-		if input.Role != nil {
+		if newRole != nil {
 			return ErrHaveNoPermission
 		}
 
@@ -134,14 +148,14 @@ func (u *UserUseCase) checkPermissions(ctx context.Context, input UserUpdateUser
 		}
 	}
 
-	if input.RequestedUserRole == entity.RoleAdmin {
+	if requestedUserRole == entity.RoleAdmin {
 		// admin can't update other admins
 		if user.Role == entity.RoleAdmin {
 			return ErrHaveNoPermission
 		}
 
 		// admin can't update role to admin
-		if input.Role != nil && entity.RoleType(*input.Role) == entity.RoleAdmin {
+		if newRole != nil && *newRole == entity.RoleAdmin {
 			return ErrHaveNoPermission
 		}
 	}

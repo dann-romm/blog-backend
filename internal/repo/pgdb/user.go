@@ -65,7 +65,7 @@ func (r *UserRepo) UpdateUserPassword(ctx context.Context, userID uuid.UUID, old
 	return nil
 }
 
-func (r *UserRepo) UpdateUser(ctx context.Context, userID uuid.UUID, name, email, description, role *string) error {
+func (r *UserRepo) UpdateUserByID(ctx context.Context, userID uuid.UUID, name, email, description *string, role *entity.RoleType) error {
 	sqlBuilder := r.Builder.
 		Update("users").
 		Set("updated_at", "NOW()")
@@ -92,8 +92,8 @@ func (r *UserRepo) UpdateUser(ctx context.Context, userID uuid.UUID, name, email
 
 	res, err := r.Pool.Exec(ctx, sql, args...)
 	if err != nil {
-		log.Errorf("UserRepo.UpdateUser - r.Pool.Exec: %v", err)
-		return fmt.Errorf("UserRepo.UpdateUser - r.Pool.Exec: %v", err)
+		log.Errorf("UserRepo.UpdateUserByID - r.Pool.Exec: %v", err)
+		return fmt.Errorf("UserRepo.UpdateUserByID - r.Pool.Exec: %v", err)
 	}
 
 	if res.RowsAffected() == 0 {

@@ -24,11 +24,12 @@ type UserCreateUserInput struct {
 type UserUpdateUserInput struct {
 	RequestedUserID   uuid.UUID
 	RequestedUserRole entity.RoleType
-	UserID            uuid.UUID
-	Name              *string
-	Email             *string
-	Role              *string
-	Description       *string
+	Username          string
+
+	NewName        *string
+	NewEmail       *string
+	NewRole        *entity.RoleType
+	NewDescription *string
 }
 
 type UserUpdateUserPasswordInput struct {
